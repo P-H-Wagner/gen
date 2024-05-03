@@ -95,12 +95,11 @@ generator = cms.EDFilter("Pythia8HadronizerFilter",
          pythia8CommonSettingsBlock,
          pythia8CP5SettingsBlock,
          processParameters = cms.vstring(
-             #'SoftQCD:nonDiffractive = on', #minimum bias component 
-             #'PTFilter:filter = on', # this turn on the filter
-             #'PTFilter:quarkToFilter = 5', # PDG id of q quark 
-             #'PTFilter:scaleToFilter = 3.0', 
-             '531:m0 = 5.36688',#mass of Bs meson
-             '531:tau0 = 0.457783083', # in mm, consistent with EvtGen
+             #'SoftQCD:nonDiffractive = on', # not needed for Bc (LHE origin)
+             #'PTFilter:filter = on', #not needed for Bc (LHE origin)
+             #'PTFilter:quarkToFilter = 5', # not needed for Bc (LHE origin)
+             #'PTFilter:scaleToFilter = 3.0', #not needed for Bc (LHE origin) 
+             '541:m0 = 6.27447',#pdg mass of Bc+ meson
              #'ProcessLevel:all = off',
  #            'HardQCD:hardbbbar = on',
  #            'PhaseSpace:pTHatMin = 100',
@@ -143,6 +142,7 @@ DsMuMaxMassFilter = cms.EDFilter(
 
 
 ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsMuMaxMassFilter)
+
 
 
 
