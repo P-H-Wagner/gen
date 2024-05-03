@@ -101,8 +101,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
              'PTFilter:filter = on', # this turn on the filter
              'PTFilter:quarkToFilter = 5', # PDG id of q quark 
              'PTFilter:scaleToFilter = 3.0', 
-             '531:m0 = 5.36688',#mass of Bs meson
-             '531:tau0 = 0.457783083', # in mm, consistent with EvtGen
+             '5122:m0 = 5.61960',#pdg mass of lambdaB 
              #'ProcessLevel:all = off',
  #            'HardQCD:hardbbbar = on',
  #            'PhaseSpace:pTHatMin = 100',
@@ -145,6 +144,164 @@ DsMuMaxMassFilter = cms.EDFilter(
 
 
 ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsMuMaxMassFilter)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -49,7 +49,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 'Alias      Mytau-     tau-',
 'ChargeConj Mytau-     Mytau+',
 
-'Decay Mytau+',  # original BR = 0.1739
+'Decay Mytau+',  # original BR = 0.173937
 '1.00000000 mu+ nu_mu anti-nu_tau PHOTOS TAULNUNU;',
 'Enddecay',
 'CDecay Mytau-',
@@ -69,15 +69,12 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 'Enddecay',
 'CDecay MyDs*+',
 
-# - 0.00695 comes from 0.5 BR of PDG Decay Nr 28, as it is the sum 
-# - Remark: we symmetrize all decays with more than one signal by once forcing one Ds(resonance), 
-#   and then the other Ds(resonance), by dividing all BRs by a factor of 0.5 
-
+#signal, set R = R* = 1 and correct for the tau forcing (17.3937%)
 'Decay MyBs',
-'0.0210     MyDs-      mu+      nu_mu       PHOTOS HQET2 1.17 1.074;',
-'0.0510     MyDs*-     mu+      nu_mu       PHOTOS HQET2 1.16 0.921 1.37 0.845;',
-'0.0036351  MyDs-      Mytau+   nu_tau      PHOTOS ISGW2;',
-'0.0088281  MyDs*-     Mytau+   nu_tau      PHOTOS ISGW2;',
+'0.0244     MyDs-      mu+      nu_mu       PHOTOS HQET2 1.17 1.074;',
+'0.053      MyDs*-     mu+      nu_mu       PHOTOS HQET2 1.16 0.921 1.37 0.845;',
+'0.004244   MyDs-      Mytau+   nu_tau      PHOTOS ISGW2;',
+'0.009219  MyDs*-     Mytau+   nu_tau      PHOTOS ISGW2;',
 'Enddecay',
 'CDecay Myanti-Bs',
 
@@ -97,8 +94,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
              'PTFilter:filter = on', # this turn on the filter
              'PTFilter:quarkToFilter = 5', # PDG id of q quark 
              'PTFilter:scaleToFilter = 3.0', 
-             '531:m0 = 5.36688',#mass of Bs meson
-             '531:tau0 = 0.457783083', # in mm, consistent with EvtGen
+             '531:m0 = 5.36692',#mass of Bs meson
              #'ProcessLevel:all = off',
  #            'HardQCD:hardbbbar = on',
  #            'PhaseSpace:pTHatMin = 100',
@@ -141,6 +137,7 @@ DsMuMaxMassFilter = cms.EDFilter(
 
 
 ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsMuMaxMassFilter)
+
 
 
 
