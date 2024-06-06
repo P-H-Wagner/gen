@@ -11,6 +11,8 @@ git clone https://github.com/P-H-Wagner/gen.git
 cmsenv
 ```
 
+## Setup the framework
+
 Compile by running:
 
 ```
@@ -31,7 +33,7 @@ cmsDriver.py mc/gen/python/B+_cff_template.py \
 --step GEN \
 --geometry DB:Extended \
 --era Run2_2018 \
---python_filename mc/gen/B+_cfg_template.py \
+--python_filename B+_cfg_template.py \
 --no_exec \
 --customise Configuration/DataProcessing/Utils.addMonitoring \
 -n -1
@@ -39,8 +41,19 @@ cmsDriver.py mc/gen/python/B+_cff_template.py \
 
 Proceed equivalently for the other cff files. Adapt conditions, beamspot, .. if necessary.
 
+IMPORTANT: Add the following lines at the end of the generated cfg file in order to enable random seeds when dividing into different jobs:
+
+```
+from IOMC.RandomEngine.RandomServiceHelper import  RandomNumberServiceHelper
+randHelper =  RandomNumberServiceHelper(process.RandomNumberGeneratorService)
+randHelper.populate()
+process.RandomNumberGeneratorService.saveFileName =  cms.untracked.string("RandomEngineState.log")
+
+```
+
 The cfg file which has been create with the cmsDriver command can now be run using:
 
 ```
 cmsRun mc/gen/B+_cfg_template.py
 ```
+

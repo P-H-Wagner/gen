@@ -123,7 +123,8 @@ diquarks = [
     5503,
 ]
 
-motherids = {"Bs": 531, "B0":511, "B+":521 ,"Bc+":541 , "LambdaB":5122, "signals": 531}
+#motherids = {"Bs": 531, "B0":511, "B+":521 ,"Bc+":541 , "LambdaB":5122, "signals": 531} #old
+motherids = {"bs": 531, "b0":511, "bplus":521 ,"bc":541 , "lambdab":5122, "signals": 531}
 
 #we have 4 signal types: 
 # Ds mu = 0
@@ -178,14 +179,16 @@ def isAncestor(mot,dau):
 
 #miniAOD file(s) to process
 if(os.path.isfile(input_file)):
-
+    print("i am here!")
     #signle miniAOD file
     event_list = [Events(input_file)]
     path_mother = input_file.split("_fragment")[0]
-    mother = path_mother.split("pahwagne/")[1]
+    #mother = path_mother.split("pahwagne/")[1] old
+    mother = path_mother.split("miniAOD/")[1]
     #mother = ["Bc+"]
 if(os.path.isdir(input_file)):
 
+    print("i am here2!")
     #folder of miniAOD files use TChain to stack
     event_list = []
     for tree in os.listdir(input_file):
