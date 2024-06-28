@@ -23,7 +23,7 @@ variables = list(itertools.product(moms, variables))
 variables = ['_'.join(comb) for comb in variables]
 
 labels = {
-'b_pt': r'p_{T} H_{b} [GeV]',
+'b_pt': r'p_{T} (H_{b}) [GeV]',
 'ds_pt':r'p_{T} D_{s}-meson [GeV]',
 'mu_pt':r'p_{T} #mu [GeV]',
 'kp_pt':r'p_{T} K^{+} [GeV]',
@@ -38,7 +38,7 @@ labels = {
 
 }
 
-def printScale(name):
+def printScale(name,maxx):
 
   chain1 = ROOT.TChain("tree")
   chain3 = ROOT.TChain("tree")
@@ -69,8 +69,8 @@ def printScale(name):
 
         if 'eta' in var: var = 'abs(' + var + ')'
  
-        maxx = max([chains[0].GetMaximum(var),chains[1].GetMaximum(var)])
-        if var == 'pi_pt': maxx = 40
+        #maxx = max([chains[0].GetMaximum(var),chains[1].GetMaximum(var)])
+        #if var == 'pi_pt': maxx = 40
 
 
         print "Start filling " + var + " histogram; Events to fill: " + str(chains[0].GetEntries() + chains[1].GetEntries())
@@ -81,6 +81,9 @@ def printScale(name):
         h.GetYaxis().SetTitle('a.u.')
         h.GetXaxis().SetTitle(var)
         h.GetXaxis().SetTitle(labels[var])
+
+        if name == "signal":
+          h.GetXaxis().SetTitle(r"p_{T}(B_{s}) [GeV]")
  
         h1 = h.Clone()
         h1.SetName("1")
@@ -142,6 +145,6 @@ def printScale(name):
         if 'eta' in var: var = var[4:-1]
         c1.SaveAs("./scaleplots/scaletofilter_{0}_{1}.png".format(name,var))
 
-printScale("signal")
-printScale("bkg")
+printScale("signal",50)
+printScale("bkg",50)
 
