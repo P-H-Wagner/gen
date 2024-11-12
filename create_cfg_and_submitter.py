@@ -16,6 +16,19 @@ import os
 from glob import glob
 from datetime import datetime
 import sys
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('channel')
+parser.add_argument('folder')
+args = parser.parse_args()
+
+#to process
+if args.channel == "all":
+  fragments = ["sig","bs","bplus","b0","lambdab"]
+else:
+  fragments = [args.channel]
+
 
 # We measured to be able to produce:  9 events / second -> dont use that
 # On the standard queue we only hat 2.5 events / second!!!!!!
@@ -31,24 +44,26 @@ import sys
 #do the calculation with 4ev/s. We have 7h = 25200s, thus we have 4ev/s * 25200s = 100800 events in each sample. 
 #on standard we have 500 jobs -> take 100 for every of the 4 mothers = use 400 jobs. Since we have 8 cores, we assign 100/8 = 12 jobs for each mother 
 
-njobs = 50
-events_per_job = 5000
-#queue = 'standard'; time = 720 
-queue = 'short'   ; time = 60
-# queue = 'long'    ; time = 10080
+#Event throughout for MC without filter (for hammer) is 2ev/s
+
+
+njobs = 200 #30
+events_per_job =  1000#5000
+#queue = 'standard' ; time = 360 #720 
+#queue = 'short'   ; time = 60
+queue = 'standard'    ; time = 360
 
 #get date and time
 now = datetime.now()
 dt_string = now.strftime("%d_%m_%Y_%H_%M_%S")
 
 #fragments to produce
-#fragments = [fragments.split("_cfg")[0] for fragments in os.listdir("./config_files/")] 
-fragments = ["Bc+"]  #["signals","Bs","B+","B0","LambdaB"]
 print("Preparing folders for {0} decays".format(fragments))
 
 for fragment in fragments:
 
   out_dir          = "{0}_fragment_{1}".format(fragment,dt_string)
+
   template_cfg     = "{0}_cfg_template.py".format(fragment)
   template_fileout = "{0}_fragment_{1}.root".format(fragment,dt_string)
   
@@ -69,8 +84,7 @@ for fragment in fragments:
     tmp_fileout = template_fileout.replace("fragment","fragment_chunk{0}".format(ijob))
     
     #input file
-    fin = open("config_files/"+template_cfg, "rt") # the real deal
-    #fin = open("./../../cfg_from_cff/"+"{0}_cfg.py".format(fragment), "rt") #for testing
+    fin = open( args.folder + "/" + template_cfg, "rt") 
 
     #output file to write the result to
     fout = open("{0}/{1}".format(out_dir, tmp_cfg), "wt")
@@ -95,7 +109,7 @@ for fragment in fragments:
         'mkdir -p /scratch/pahwagne/{scratch_dir}',
         'ls /scratch/pahwagne/',
         'cmsRun {cfg}',
-        'xrdcp /scratch/pahwagne/{scratch_dir}/{fout} root://t3dcachedb.psi.ch:1094///pnfs/psi.ch/cms/trivcat/store/user/pahwagne/{se_dir}/{fout}',
+        'xrdcp /scratch/pahwagne/{scratch_dir}/{fout} root://t3dcachedb.psi.ch:1094///pnfs/psi.ch/cms/trivcat/store/user/pahwagne/miniAOD/{se_dir}/{fout}',
         'rm /scratch/pahwagne/{scratch_dir}/{fout}',
         '',
     ]).format(
@@ -113,16 +127,16 @@ for fragment in fragments:
         'sbatch', 
         '-p %s'%queue, 
         '--account=t3', 
-        '--mem=3000M',
+        #'--mem=1800M',
         '-o %s/logs/chunk%d.log' %(out_dir, ijob),
         '-e %s/errs/chunk%d.err' %(out_dir, ijob), 
         '--job-name=%s' %out_dir, 
         '--time=%d'%time,
-        '--cpus-per-task=8', 
+        #'--cpus-per-task=8', 
         '%s/submitter_chunk%d.sh' %(out_dir, ijob), 
     ])
 
     print(command_sh_batch)
-    #os.system(command_sh_batch)
+    os.system(command_sh_batch)
     
     
