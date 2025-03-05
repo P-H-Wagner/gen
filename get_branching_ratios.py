@@ -7,22 +7,30 @@ tau_scale    = ufloat(0.1739, 0.0004)
 dsStar_scale = ufloat(0.936 , 0.004 ) + ufloat(0.0577, 0.0035) 
 ds2457_scale = ufloat(0.18  , 0.04  ) + ufloat(0.48  , 0.11  ) + ufloat(0.043, 0.013) + ufloat(0.037, 0.05) + ufloat(0.022, 0)
 
+print(dsStar_scale)
+
 def print_br(dictionary, name):
 
   print(f" -------- {name} --------- ")
 
-  output = dictionary.copy()
-
   for key in dictionary.keys():
-    
-    if "MyTau"    in key: output[key] *= tau_scale
-    if "MyDs*"    in key: output[key] *= dsStar_scale
-    if "MyDs2457" in key: output[key] *= ds2457_scale
 
-  max_key_length = max(len(key) for key in output)
+    value = dictionary[key]
+    scales = "applying: " 
 
-  for key, value in output.items():
-    print(f"{key:<{max_key_length}}: {value}")
+    if "MyTau"    in key: 
+      scales += " tau scale, " 
+      value *= tau_scale
+
+    if "MyDs*"    in key: 
+      scales += " Ds* scale, "
+      value *= dsStar_scale
+
+    if "MyDs2457" in key: 
+      scales += " Ds2457 scale, " 
+      value *= ds2457_scale
+
+    print(f"{key:<30}: {value:<20} {scales}")
 
 
 
@@ -45,8 +53,8 @@ decays_bs = {
 "MyDs-_d+"              : ufloat(0.00028, 0.00005),
 "MyDs+_d*-"             : ufloat(0.00039, 0.00008),
 
-"ds+* MyDs-"            : 0.5 * ufloat(0.0139,0.0017),
-"MyDs+* ds-"            : 0.5 * ufloat(0.0139,0.0017),
+"ds+* MyDs-"            : 0.25 * ufloat(0.0139,0.0017),
+"MyDs*+ ds-"            : 0.25 * ufloat(0.0139,0.0017),
 
 "ds*- MyDs*+"           : 0.5 * ufloat(0.0144, 0.0021),
 "MyDs*- ds*+"           : 0.5 * ufloat(0.0144, 0.0021), 
@@ -95,8 +103,8 @@ decays_bs = {
 "MyDs-_d0_k*+"             : ufloat(0.0025, 0),
 "MyDs-_d+_k*0"             : ufloat(0.0025, 0),
 
-
-
+"MyDs*+_d-"                : ufloat(0.001700000,0),  
+"MyDs*+_d*-"               : ufloat(0.001700000,0),  
 
 } 
 
@@ -108,14 +116,14 @@ decays_b0 = {
 "MyDs*+_d-"         : ufloat(0.0074, 0.0016),
 "MyDs*+_d*-"        : ufloat(0.0177, 0.0014),
 
-"ds-_MyDs+"         : 0.5 * ufloat(0.000036, 0), #upper limit only, new in pdg, in Dec: 0.000020000 
-"MyDs-_ds+"         : 0.5 * ufloat(0.000036, 0), #upper limit only, new in pdg, in Dec: 0.000020000
+"ds-_MyDs+"         : 0.5 * ufloat(0.000020000, 0), #upper limit only, new in pdg, UL in pdg: 0.000036, take value from DEC file!
+"MyDs-_ds+"         : 0.5 * ufloat(0.000020000, 0), #upper limit only, new in pdg, UL in pdg: 0.000036, take value from DEC file!
 
-"ds*-_MyDs+"        : 0.5 * ufloat(0.00013, 0), #upper limit only, in Dec: 0.000024000 
-"MyDs*-_ds+"        : 0.5 * ufloat(0.00013, 0), #upper limit only, in Dec: 0.000024000 
+"ds*-_MyDs+"        : 0.5 * ufloat(0.000024000, 0), #upper limit only, UL in pdg: 0.00013, take value from DEC file!
+"MyDs*-_ds+"        : 0.5 * ufloat(0.000024000, 0), #upper limit only, UL in pdg: 0.00013, take value from DEC file!
 
-"ds*+_MyDs*-"       : 0.5 * ufloat(0.00024, 0), #upper limit only, in Dec: 0.000030000
-"MyDs*+_ds*-"       : 0.5 * ufloat(0.00024, 0), #upper limit only, in Dec: 0.000030000
+"ds*+_MyDs*-"       : 0.5 * ufloat(0.000030000, 0), #upper limit only, UL in pdg: 0.00024, take value from DEC file!
+"MyDs*+_ds*-"       : 0.5 * ufloat(0.000030000, 0), #upper limit only, UL in pdg: 0.00024, take value from DEC file!
 
 "MyDs2317+_d-"      : ufloat(0.00106, 0.00016),
 "d*-_MyDs2317+"     : ufloat(0.0015 , 0.0006), 
@@ -155,9 +163,9 @@ decays_bplus = {
 #"MyDs*-_k+_tau+_nu"   : ufloat(0.00029, 0.00019) # stop! this is only measured for l = e, mu
 #cannot simply multiply with rDs, since the feynman diagram involves extra quarks! 
 "MyDs2317+_anti_d0"   : ufloat(0.0008 , 0.00016), 
-"anti_d*0_MyDs*2317+" : ufloat(0.0009 , 0.0007 ), 
+"anti_d*0_MyDs2317+" : ufloat(0.0009 , 0.0007 ), 
 "MyDs2457+_anti_d0"   : ufloat(0.0031 , 0.0010 ), 
-"anti_d*0_MyDs*2457+" : ufloat(0.0120 , 0.003  ), 
+"anti_d*0_MyDs2457+" : ufloat(0.0120 , 0.0030 ), 
 "MyDs*+_anti_d0"      : ufloat(0.0076 , 0.0016 ), 
 "MyDs*+_anti_d*0"     : ufloat(0.0171 , 0.0024 ), 
 
@@ -200,15 +208,19 @@ decays_lambdab = {
 
 decays_bcplus = {
 
-"MyDs+_anti_d0"   : ufloat(0.00072, 0.0), #upper limit only,   in Dec: 0.000004800  
-"MyDs+_d0"        : ufloat(0.00030, 0.0), #upper limit only,   in Dec: 0.000006600
-"MyDs+_anti_d*0"  : ufloat(0.00046, 0.0), #upper limit only,   in Dec: 0.000007100    
-"MyDs+_d*0"       : ufloat(0.00066, 0.0), #upper limit only,   in Dec: 0.000006300   
+"MyDs+_anti_d0"   : ufloat(0.000004800, 0.0), #upper limit only, UL in pdg: 0.00072 , take value from DEC file!
+"MyDs+_d0"        : ufloat(0.000006600, 0.0), #upper limit only, UL in pdg: 0.00030 , take value from DEC file!
+"MyDs+_anti_d*0"  : ufloat(0.000007100, 0.0), #upper limit only, UL in pdg: 0.00046 , take value from DEC file!
+"MyDs+_d*0"       : ufloat(0.000006300, 0.0), #upper limit only, UL in pdg: 0.00066 , take value from DEC file!
+                                      
+"MyDs*+_anti_d0"  : ufloat(0.000004500, 0.0), #upper limit only, UL in pdg: 0.00053 , take value from DEC file!
+"MyDs*+_d0"       : ufloat(0.000008500, 0.0), #upper limit only, UL in pdg: 0.0009  , take value from DEC file!
+"MyDs*+_anti_d*0" : ufloat(0.000026000, 0.0), #upper limit only, UL in pdg: 0.0013  , take value from DEC file!
+"MyDs*+_d*0"      : ufloat(0.000040400, 0.0), #upper limit only, UL in pdg: 0.0013  , take value from DEC file!
 
-"MyDs*+_anti_d0"  : ufloat(0.00053, 0.0), #upper limit only, in Dec: 0.000004500 
-"MyDs*+_d0"       : ufloat(0.0009 , 0.0), #upper limit only, in Dec: 0.000008500 
-"MyDs*+_anti_d*0" : ufloat(0.0013 , 0.0), #upper limit only, in Dec: 0.000026000 
-"MyDs*+_d*0"      : ufloat(0.0013 , 0.0), #upper limit only, in Dec: 0.000040400
+"jpsi_MyDs+"      : ufloat(0.001700000, 0.0), 
+"jpsi_MyDs*+"     : ufloat(0.006700000, 0.0), 
+
 
 # these decays are not measured yet (not in PDG) and we take them from evtgen DEC
 # dont need them, we dont care where the Bs is coming from!
