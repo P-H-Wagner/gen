@@ -64,21 +64,27 @@ generator = cms.EDFilter("Pythia8HadronizerFilter",
 'CDecay MyDs-',
 
 'Decay MyDs*-',
-'0.942      MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
-'0.058      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
+'0.936       MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
+'0.0577      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
 'Enddecay',
 'CDecay MyDs*+',
 
 #BR and charges checked
+# all these are upper limit in pdg, take value from dec
 'Decay MyBc+ ',
-'0.00072 MyDs+ anti-D0 PHSP;',
-'0.00030 MyDs+ D0 PHSP;',
-'0.00046 anti-D*0 MyDs+ SVS;',
-'0.00066 D*0 MyDs+ SVS;',
-'0.00053 MyDs*+ anti-D0 SVS;',
-'0.0009 MyDs*+ D0 SVS;',
-'0.0013 MyDs*+ anti-D*0 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;',
-'0.0013 MyDs*+ D*0 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;',
+'0.0000048   MyDs+ anti-D0 PHSP;',
+'0.0000066   MyDs+ D0 PHSP;',
+'0.0000071   anti-D*0 MyDs+ SVS;',
+'0.0000063   D*0 MyDs+ SVS;',
+'0.000004472 MyDs*+ anti-D0 SVS;',
+'0.00000845  MyDs*+ D0 SVS;',
+'0.00002584  MyDs*+ anti-D*0 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;',
+'0.00004015  MyDs*+ D*0 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;',
+
+#not in pdg
+'0.0017    J/psi  D_s-       SVS;',
+'0.00666   J/psi  D_s*-      SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;',
+
 'Enddecay ',
 'CDecay MyBc-',
 
@@ -128,6 +134,20 @@ PhiToKKFromDsFilter = cms.EDFilter(
      ParticleID      = cms.untracked.int32  (333) # phi
 )
 
+DsToPhiPiFilter = cms.EDFilter(
+     "PythiaFilterMultiAncestor",
+     DaughterIDs     = cms.untracked.vint32 (  333,  -211), # phi, pion-
+     DaughterMaxEtas = cms.untracked.vdouble( 2.55,  2.55),
+     DaughterMaxPts  = cms.untracked.vdouble( 1.e9,  1.e9),
+     DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55),
+     DaughterMinPts  = cms.untracked.vdouble(  0.5,   0.5),
+     MaxEta          = cms.untracked.double ( 99.0),
+     MinEta          = cms.untracked.double (-99.0),
+     MinPt           = cms.untracked.double (-1.0),
+     MotherIDs       = cms.untracked.vint32 (5),
+     ParticleID      = cms.untracked.int32  (-431) # Ds-
+ )
+
 DsMuMaxMassFilter = cms.EDFilter(
      "MCParticlePairFilter",
      ParticleID1    = cms.untracked.vint32(431), # Ds+
@@ -141,7 +161,7 @@ DsMuMaxMassFilter = cms.EDFilter(
 )
 
 
-ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsMuMaxMassFilter)
+ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsToPhiPiFilter + DsMuMaxMassFilter)
 
 
 

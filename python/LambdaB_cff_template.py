@@ -64,24 +64,19 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 'CDecay MyDs-',
 
 'Decay MyDs*-',
-'0.942      MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
-'0.058      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
+'0.936       MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
+'0.0577      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
 'Enddecay',
 'CDecay MyDs*+',
 
-#Both decays are taken from DECAY_NOLONGLFIE_2020.DEC
-#The ratios are also taken from there, they are *not* consistent with the PDG,
-#however it is an overall factor of 2, which does not matter for the production.
-#
-
-#Remark that the MyDs*- mode is not in the pdg, but as otherwise we just have a single mode
-#to force, and we know it is there, we take it as well. This is the only time we do this!!!
-#Normally such cases are in the mother_notinPDG.dec file!
 
 #BR and charges checked
 'Decay MyLambdaB',
-'0.02200    Lambda_c+       MyDs-                         PHSP;',
-'0.04400    Lambda_c+       MyDs*-                        PHSP;',
+'0.0110    Lambda_c+       MyDs-                         PHSP;',
+
+# these decays are not measured yet (not in PDG) and we take them from evtgen DEC
+'0.04372    Lambda_c+       MyDs*-                        PHSP;',
+
 'Enddecay ',
 'CDecay Myanti-LambdaB',
 
@@ -101,7 +96,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
              'PTFilter:filter = on', # this turn on the filter
              'PTFilter:quarkToFilter = 5', # PDG id of q quark 
              'PTFilter:scaleToFilter = 3.0', 
-             '5122:m0 = 5.61960',#pdg mass of lambdaB 
+             '5122:m0 = 5.61960',#pdg mass of lambdaB, pdg 2025 
              #'ProcessLevel:all = off',
  #            'HardQCD:hardbbbar = on',
  #            'PhaseSpace:pTHatMin = 100',
@@ -126,9 +121,24 @@ PhiToKKFromDsFilter = cms.EDFilter(
      MaxEta          = cms.untracked.double ( 99.0), # no restrictions on phi, as it is intermediate
      MinEta          = cms.untracked.double (-99.0), # dito (below it is even 1e9, no difference)
      MinPt           = cms.untracked.double (-1.0),  # dito (-1 means allow all)
-     MotherIDs       = cms.untracked.vint32 (431), # Ds+
-     ParticleID      = cms.untracked.int32  (333) # phi
+     MotherIDs       = cms.untracked.vint32 (431),   # Ds+
+     ParticleID      = cms.untracked.int32  (333)    # Phi
 )
+
+DsToPhiPiFilter = cms.EDFilter(
+     "PythiaFilterMultiAncestor",
+     DaughterIDs     = cms.untracked.vint32 (  333,  -211), # phi, pion-
+     DaughterMaxEtas = cms.untracked.vdouble( 2.55,  2.55),
+     DaughterMaxPts  = cms.untracked.vdouble( 1.e9,  1.e9),
+     DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55),
+     DaughterMinPts  = cms.untracked.vdouble(  0.5,   0.5),
+     MaxEta          = cms.untracked.double ( 99.0),
+     MinEta          = cms.untracked.double (-99.0),
+     MinPt           = cms.untracked.double (-1.0),
+     MotherIDs       = cms.untracked.vint32 (5),
+     ParticleID      = cms.untracked.int32  (-431) # Ds-
+ )
+
 
 DsMuMaxMassFilter = cms.EDFilter(
      "MCParticlePairFilter",
@@ -143,7 +153,7 @@ DsMuMaxMassFilter = cms.EDFilter(
 )
 
 
-ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsMuMaxMassFilter)
+ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsToPhiPiFilter + DsMuMaxMassFilter)
 
 
 

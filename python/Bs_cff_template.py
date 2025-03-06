@@ -14,8 +14,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
   comEnergy = cms.double(13000.0),
   ExternalDecays = cms.PSet(
 
-    #untracked parameters are not saved in the output file as they have no e    ffect on the final output files
-    #and thus are not useful information to save
+    #untracked parameters are not saved in the output file 
     EvtGen130 = cms.untracked.PSet(
       #everything which is not forced is found here (or in pythia)
       decay_table = cms.string('GeneratorInterface/EvtGenInterface/data/DECAY_2020_NOLONGLIFE.DEC'),
@@ -37,54 +36,139 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 'Alias      MyBs         B_s0',
 'Alias      Myanti-Bs    anti-B_s0',
 'ChargeConj Myanti-Bs    MyBs',
+
 'Alias      Mytau+       tau+',
 'Alias      Mytau-       tau-',
 'ChargeConj Mytau-       Mytau+',
+
 'Alias      MyDs+        D_s+',
 'Alias      MyDs-        D_s-',
 'ChargeConj MyDs-        MyDs+',
+
 'Alias      MyDs*+       D_s*+',
 'Alias      MyDs*-       D_s*-',
 'ChargeConj MyDs*-       MyDs*+',
+
 'Alias      MyPhi        phi',
 'ChargeConj MyPhi        MyPhi',
+
+'Alias      MyDs*(2317)- D_s0*- ',
+'Alias      MyDs*(2317)+ D_s0*+ ',
+'ChargeConj MyDs*(2317)+ MyDs*(2317)-',
+
+'Alias      MyDs*(2457)- D_s1- ',
+'Alias      MyDs*(2457)+ D_s1+ ',
+'ChargeConj MyDs*(2457)+ MyDs*(2457)-',
 
 'Decay Mytau+',  # original BR = 0.1739
 '1.00000000 mu+ nu_mu anti-nu_tau PHOTOS TAULNUNU;',
 'Enddecay',
 'CDecay Mytau-',
 
-'Decay MyPhi',  # original BR = 0.489
+'Decay MyPhi',  # original BR = 0.491
 '1.00000000 K+ K- VSS;',
 'Enddecay',
 
-'Decay MyDs+',  # original BR = 0.0221
+'Decay MyDs+',  # original BR = 0.045
 '1.00000000 MyPhi pi+ SVS;',
 'Enddecay',
 'CDecay MyDs-',
 
-'Decay MyDs*-',
-'0.942      MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
-'0.058      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
+'Decay MyDs*-', # sums up to 0.994+/-0.005 
+'0.936       MyDs-    gamma   PHOTOS VSP_PWAVE;',
+'0.0577      MyDs-    pi0     PHOTOS VSS;',
 'Enddecay',
 'CDecay MyDs*+',
 
-# - 0.00695 comes from 0.5 BR of PDG Decay Nr 28, as it is the sum 
+#Ds*(2317) decay, compare with LHCb:
+#https://gitlab.cern.ch/lhcb-datapkg/Gen/DecFiles/-/blob/master/dkfiles/B+_DstXc,Xc2hhhNneutrals_cocktail_3pi,upto5prongs=DecProdCut.dec?ref_type=heads
+
+'Decay MyDs*(2317)-', #orignal BR is also 100% in PDG (with large unc. but ok) and in .DEC
+'1.00000000 MyDs- pi0 PHSP; ',
+'Enddecay',
+'CDecay MyDs*(2317)+',
+
+#Ds*(2457) decay, compare with LHCb:
+#https://gitlab.cern.ch/lhcb-datapkg/Gen/DecFiles/-/blob/master/dkfiles/B+_DstXc,Xc2hhhNneutrals_cocktail_3pi,upto5prongs=DecProdCut.dec?ref_type=heads
+
+
+# - MyDs*- gamma not present in the LHCb file, but it is in PDG, so we include it.
+#   Its mode is motivated from MyDs*- gamma decay (Line 6687 in DECAY_NOLONGLFIE_2020.DEC)
+# - LHCb is including the Ds pi0 pi0 final state, we take it over 
+
+'Decay MyDs*(2457)+', #original BR = 0.74  
+'0.18           MyDs+          gamma           VSP_PWAVE;',
+'0.48           MyDs*+         pi0             PHSP;',
+'0.043          MyDs+          pi+     pi-     PHSP;',
+'0.037          MyDs*(2317)+   gamma           VSP_PWAVE;',
+'0.022          MyDs+          pi0     pi0     PHSP;',
+'Enddecay',
+'CDecay MyDs*(2457)-',
+
 # - Remark: we symmetrize all decays with more than one signal by once forcing one Ds(resonance), 
 #   and then the other Ds(resonance), by dividing all BRs by a factor of 0.5 
 
 'Decay MyBs',
-'0.0022 MyDs- D_s+ PHSP;', #0.0044*0.5 = 0.0022
+
+## From PDG
+
+'0.0022 MyDs- D_s+ PHSP;',  #0.0044*0.5 = 0.0022
 '0.0022 D_s- MyDs+ PHSP;',  #0.0044*0.5 = 0.0022
 
 '0.00028 MyDs- D+ PHSP;', 
 '0.00039 D*- MyDs+ SVS;', 
 
-'0.003475 MyDs*+ D_s- SVS;', #0.00695*0.5 = 0.003475
-'0.003475 D_s*+ MyDs- SVS;', #0.00695*0.5 = 0.003475
+'0.0035 MyDs*+ D_s- SVS;', #0.00695*0.5 = 0.003475
+'0.0035 D_s*+ MyDs- SVS;', #0.00695*0.5 = 0.003475
 
 '0.0072 MyDs*- D_s*+ SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', #0.0144*0.5 = 0.0072 
 '0.0072 D_s*- MyDs*+ SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', #0.0144*0.5 = 0.0072
+
+# these decays are not measured yet (not in PDG) and we take them from evtgen DEC
+'0.0030     MyDs*(2457)-   mu+    nu_mu        PHOTOS       ISGW2;',
+'0.0040     MyDs*(2317)-   mu+    nu_mu        PHOTOS       ISGW2;',
+
+'0.00137    MyDs*(2457)-   tau+   nu_tau                    ISGW2;',
+'0.0018     MyDs*(2317)-   tau+   nu_tau                    ISGW2;',
+
+'0.0096     MyDs+        D-          anti-K0                PHSP;',
+'0.0096     MyDs+        D0          K-                     PHSP;',
+'0.00954    MyDs*+       D-          anti-K0                PHSP;',
+'0.00954    MyDs*+       anti-D0     K-                     PHSP;',
+
+'0.0024     MyDs+        D-          pi0        anti-K0     PHSP;',
+'0.0048     MyDs+        anti-D0     pi-        anti-K0     PHSP;',
+'0.0048     MyDs+        D-          pi+        K-          PHSP;',
+'0.0024     MyDs+        anti-D0     pi0        K-          PHSP;',
+
+'0.002385   MyDs*+       D-          pi0        anti-K0     PHSP;',
+'0.004770   MyDs*+       anti-D0     pi-        anti-K0     PHSP;',
+'0.004770   MyDs*+       D-          pi+        K-          PHSP;',
+'0.002385   MyDs*+       anti-D0     pi0        K-          PHSP;',
+
+'0.01491    MyDs*-       D*0         K+                     PHSP;',
+'0.01491    MyDs*-       D*+         K0                     PHSP;',
+'0.004968   MyDs*-       D0          K+                     PHSP;',
+'0.004968   MyDs*-       D+          K0                     PHSP;',
+
+'0.0050     MyDs-        D*0         K+                     PHSP;',
+'0.0050     MyDs-        D*+         K0                     PHSP;',
+'0.0020     MyDs-        D0          K+                     PHSP;',
+'0.0020     MyDs-        D+          K0                     PHSP;',
+
+'0.002981   MyDs*-       D*0         K*+                    PHSP;',
+'0.002981   MyDs*-       D*+         K*0                    PHSP;',
+'0.004968   MyDs*-       D0          K*+                    PHSP;',
+'0.004968   MyDs*-       D+          K*0                    PHSP;',
+
+'0.0025     MyDs-        D*0         K*+                    PHSP;',
+'0.0025     MyDs-        D*+         K*0                    PHSP;',
+'0.0025     MyDs-        D0          K*+                    PHSP;',
+'0.0025     MyDs-        D+          K*0                    PHSP;',
+
+'0.001689   MyDs*+       D-                                 SVS;',
+'0.001689   MyDs*+       D*-    SVV_HELAMP  1.0 0.0 1.0 0.0 1.0 0.0;',
+
 
 'Enddecay',
 'CDecay Myanti-Bs',
@@ -101,11 +185,11 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
          pythia8CommonSettingsBlock,
          pythia8CP5SettingsBlock,
          processParameters = cms.vstring(
-             'SoftQCD:nonDiffractive = on', #minimum bias component 
-             'PTFilter:filter = on', # this turn on the filter
-             'PTFilter:quarkToFilter = 5', # PDG id of q quark 
+             'SoftQCD:nonDiffractive = on', # minimum bias component 
+             'PTFilter:filter = on',        # this turn on the filter
+             'PTFilter:quarkToFilter = 5',  # PDG id of q quark 
              'PTFilter:scaleToFilter = 3.0', 
-             '531:m0 = 5.36692',#pdg mass of Bs meson
+             '531:m0 = 5.36693',            # pdg mass of Bs meson, pdg 2025
              #'ProcessLevel:all = off',
  #            'HardQCD:hardbbbar = on',
  #            'PhaseSpace:pTHatMin = 100',
@@ -130,9 +214,26 @@ PhiToKKFromDsFilter = cms.EDFilter(
      MaxEta          = cms.untracked.double ( 99.0), # no restrictions on phi, as it is intermediate
      MinEta          = cms.untracked.double (-99.0), # dito (below it is even 1e9, no difference)
      MinPt           = cms.untracked.double (-1.0),  # dito (-1 means allow all)
-     MotherIDs       = cms.untracked.vint32 (431), # Ds+
-     ParticleID      = cms.untracked.int32  (333) # phi
+     MotherIDs       = cms.untracked.vint32 (431),   # Ds+
+     ParticleID      = cms.untracked.int32  (333)    # phi
 )
+
+
+DsToPhiPiFilter = cms.EDFilter(
+     "PythiaFilterMultiAncestor",
+     DaughterIDs     = cms.untracked.vint32 (  333,  -211), # phi, pion-
+     DaughterMaxEtas = cms.untracked.vdouble( 2.55,  2.55),
+     DaughterMaxPts  = cms.untracked.vdouble( 1.e9,  1.e9),
+     DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55),
+     DaughterMinPts  = cms.untracked.vdouble(  0.5,   0.5),
+     MaxEta          = cms.untracked.double ( 99.0),
+     MinEta          = cms.untracked.double (-99.0),
+     MinPt           = cms.untracked.double (-1.0),
+     MotherIDs       = cms.untracked.vint32 (5),
+     ParticleID      = cms.untracked.int32  (-431) # Ds-
+ )
+
+#what about Ds + mu from B mom ?
 
 DsMuMaxMassFilter = cms.EDFilter(
      "MCParticlePairFilter",
@@ -147,7 +248,7 @@ DsMuMaxMassFilter = cms.EDFilter(
 )
 
 
-ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsMuMaxMassFilter)
+ProductionFilterSequence = cms.Sequence(generator + PhiToKKFromDsFilter + DsToPhiPiFilter + DsMuMaxMassFilter)
 
 
 

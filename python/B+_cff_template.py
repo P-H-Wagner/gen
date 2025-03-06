@@ -28,7 +28,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
       'MyB-',
       ),
 
-      #remark PDG ID of Bs is (531), the default list is cms.vint32()
+      #remark PDG ID of B+ is (521), the default list is cms.vint32()
       operates_on_particles = cms.vint32(521,-521),
       convertPythiaCodes = cms.untracked.bool(False),
 
@@ -37,20 +37,26 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 'Alias      MyB+         B+',
 'Alias      MyB-         B-',
 'ChargeConj MyB+         MyB-',
+
 'Alias      Mytau+       tau+',
 'Alias      Mytau-       tau-',
 'ChargeConj Mytau-       Mytau+',
+
 'Alias      MyDs+        D_s+',
 'Alias      MyDs-        D_s-',
 'ChargeConj MyDs-        MyDs+',
+
 'Alias      MyDs*+       D_s*+',
 'Alias      MyDs*-       D_s*-',
 'ChargeConj MyDs*-       MyDs*+',
+
 'Alias      MyPhi        phi',
 'ChargeConj MyPhi        MyPhi',
+
 'Alias      MyDs*(2317)- D_s0*- ',
 'Alias      MyDs*(2317)+ D_s0*+ ',
 'ChargeConj MyDs*(2317)+ MyDs*(2317)-',
+
 'Alias      MyDs*(2457)- D_s1- ',
 'Alias      MyDs*(2457)+ D_s1+ ',
 'ChargeConj MyDs*(2457)+ MyDs*(2457)-',
@@ -61,25 +67,25 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 'Enddecay',
 'CDecay Mytau-',
 
-'Decay MyPhi',  # original BR = 0.489
+'Decay MyPhi',  # original BR = 0.491
 '1.00000000 K+ K- VSS;',
 'Enddecay',
 
-'Decay MyDs+',  # original BR = 0.0221
+'Decay MyDs+',  # original BR = 0.045
 '1.00000000 MyPhi pi+ SVS;',
 'Enddecay',
 'CDecay MyDs-',
 
-'Decay MyDs*-',
-'0.942      MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
-'0.058      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
+'Decay MyDs*-', # original BR = 0.9937
+'0.936      MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
+'0.0577     MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
 'Enddecay',
 'CDecay MyDs*+',
 
 #Ds*(2317) decay, mode from LHCb:
 #https://gitlab.cern.ch/lhcb-datapkg/Gen/DecFiles/-/blob/master/dkfiles/B+_DstXc,Xc2hhhNneutrals_cocktail_3pi,upto5prongs=DecProdC    ut.dec?ref_type=heads
 
-'Decay MyDs*(2317)-',
+'Decay MyDs*(2317)-', #orignal BR is also 100% in PDG (with large unc. but ok) and in .DEC
 '1.00000000 MyDs- pi0 PHSP; ',
 'Enddecay',
 'CDecay MyDs*(2317)+',
@@ -92,12 +98,12 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 #   Its mode is motivated from MyDs*- gamma decay (Line 6687 in DECAY_NOLONGLFIE_2020.DEC)
 # - LHCb is including the Ds pi0 pi0 final state, which we do not, as it is not in the PDG
 
-'Decay MyDs*(2457)+',
+'Decay MyDs*(2457)+', #original BR = 0.74 
 '0.18           MyDs+          gamma           VSP_PWAVE;',
 '0.48           MyDs*+         pi0             PHSP;',
 '0.043          MyDs+          pi+     pi-     PHSP;',
 '0.037          MyDs*(2317)+   gamma           VSP_PWAVE;',
-'0.08           MyDs*+         gamma           PHSP;',
+'0.022          MyD_s+          pi0     pi0     PHSP;' # from lhcb dec file
 'Enddecay',
 'CDecay MyDs*(2457)-',
 
@@ -107,18 +113,39 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 
 #BR and charges checked
 'Decay MyB+',
-'0.00030 MyDs- K+ mu+ nu_mu PHSP;',
-'0.00009 MyDs- K+ tau+ nu_tau PHSP;',
-'0.0090 MyDs+ anti-D0 PHSP; ',
-'0.0082 anti-D*0 MyDs+ SVS; ',
-'0.00029 MyDs*- K+ mu+ nu_mu PHSP;',
-'0.00007 MyDs*- K+ tau+ nu_tau PHSP;',
-'0.0008 MyDs*(2317)+ anti-D0 PHSP;',
-'0.0009 anti-D*0 MyDs*(2317)+ SVS;',
-'0.0031 MyDs*(2457)+ anti-D0 SVS;',
-'0.0120 anti-D*0 MyDs*(2457)+ SVV_HELAMP 0.4904 0.0 0.7204 0.0 0.4904 0.0;',
-'0.0076 MyDs*+ anti-D0 SVS; ',
-'0.0171 MyDs*+ anti-D*0 SVV_HELAMP 0.48 0.0 0.734 0.0 0.48 0.0; ',
+'0.00030 MyDs- K+ mu+ nu_mu                   PHSP;',
+'0.0090 MyDs+ anti-D0                         PHSP; ',
+'0.0082 anti-D*0 MyDs+                        SVS; ',
+'0.00029 MyDs*- K+ mu+ nu_mu                  PHSP;',
+'0.0008 MyDs*(2317)+ anti-D0                  PHSP;',
+'0.0009 anti-D*0 MyDs*(2317)+                 SVS;',
+'0.0024 MyDs*(2457)+ anti-D0                  SVS;',
+'0.0091 anti-D*0 MyDs*(2457)+                 SVV_HELAMP 0.4904 0.0 0.7204 0.0 0.4904 0.0;',
+'0.0076 MyDs*+ anti-D0                        SVS; ',
+'0.0170 MyDs*+ anti-D*0                       SVV_HELAMP 0.48 0.0 0.734 0.0 0.48 0.0; ',
+
+# these decays are not measured yet (not in PDG) and we take them from evtgen DEC
+"0.0006     anti-D'_10  MyDs+                   SVS;",
+"0.001192   anti-D'_10  MyDs*+                  SVV_HELAMP 0.48 0.0 0.734 0.0 0.48 0.0;",
+"0.0012     anti-D_10   MyDs+                   SVS;";
+"0.002385   anti-D_10   MyDs*+                  SVV_HELAMP 0.48 0.0 0.734 0.0 0.48 0.0;",
+"0.0042     anti-D_2*0  MyDs+                   STS;";
+"0.003975   anti-D_2*0  MyDs*+                  PHSP;",
+
+"0.0036     MyDs+  D-  pi+                      PHSP;",
+"0.0018     MyDs+  anti-D0 pi0                  PHSP;",
+"0.003677   MyDs*+ D-  pi+                      PHSP;",
+"0.001789   MyDs*+ anti-D0 pi0                  PHSP;",
+"0.0033     MyDs+  D-  pi+  pi0                 PHSP;",
+"0.0033     MyDs+  anti-D0 pi+  pi-             PHSP;",
+"0.0008     MyDs+  anti-D0 pi0  pi0             PHSP;",
+"0.003279   MyDs*+ D-  pi+  pi0                 PHSP;",
+"0.003279   MyDs*+ anti-D0 pi+  pi-             PHSP;",
+"0.000795   MyDs*+ anti-D0 pi0  pi0             PHSP;",
+
+
+#lhcb: https://gitlab.cern.ch/lhcb-datapkg/Gen/DecFiles/-/blob/master/dkfiles/B+_DstXc,Xc2hhhNneutrals_cocktail_3pi,upto5prongs=DecProdCut.dec?ref_type=heads
+
 'Enddecay ',
 'CDecay MyB-',
  
