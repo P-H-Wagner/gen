@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: rds/gen/python/fragment_template.py --fileout file:dummy.root --mc --eventcontent RAWSIM --datatier GEN --conditions 106X_upgrade2018_realistic_v11_L1v1 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN --geometry DB:Extended --era Run2_2018 --python_filename cfg_template.py --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring
+# with command line options: rds/gen/python/B0_cff_template.py.py --fileout file:B0_test.root --mc --eventcontent RAWSIM --datatier GEN --conditions 106X_upgrade2018_realistic_v11_L1v1 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN --geometry DB:Extended --era Run2_2018 --python_filename cfgs/B0_cfg.py --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring -n -1
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
@@ -27,8 +27,11 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(HOOK_MAX_EVENTS)
 )
 
+# Dont forget me!
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+
 # Input source
-process.source = cms.Source("EmptySource", firstLuminosityBlock = cms.untracked.uint32(HOOK_FIRST_LUMI))
+process.source = cms.Source("EmptySource",  firstLuminosityBlock = cms.untracked.uint32(HOOK_FIRST_LUMI))
 
 process.options = cms.untracked.PSet(
 
@@ -36,7 +39,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('rds/gen/python/fragment_template.py nevts:1'),
+    annotation = cms.untracked.string('rds/gen/python/B0_cff_template.py.py nevts:-1'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -66,6 +69,20 @@ process.genstepfilter.triggerConditions=cms.vstring("generation_step")
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
 
+process.DsToPhiPiFilter = cms.EDFilter("PythiaFilterMultiAncestor",
+    DaughterIDs = cms.untracked.vint32(333, -333, -211),
+    DaughterMaxEtas = cms.untracked.vdouble(2.55, 2.55, 2.55),
+    DaughterMaxPts = cms.untracked.vdouble(1000000000.0, 1000000000.0, 1000000000.0),
+    DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55, -2.55),
+    DaughterMinPts = cms.untracked.vdouble(0.5, 0.5, 0.5),
+    MaxEta = cms.untracked.double(99.0),
+    MinEta = cms.untracked.double(-99.0),
+    MinPt = cms.untracked.double(-1.0),
+    MotherIDs = cms.untracked.vint32(511),
+    ParticleID = cms.untracked.int32(431)
+)
+
+
 process.PhiToKKFromDsFilter = cms.EDFilter("PythiaFilterMultiAncestor",
     DaughterIDs = cms.untracked.vint32(-321, 321),
     DaughterMaxEtas = cms.untracked.vdouble(2.55, 2.55),
@@ -78,6 +95,33 @@ process.PhiToKKFromDsFilter = cms.EDFilter("PythiaFilterMultiAncestor",
     MotherIDs = cms.untracked.vint32(431),
     ParticleID = cms.untracked.int32(333)
 )
+
+process.DsToPiFromB0Filter = cms.EDFilter("PythiaFilterMultiAncestor",
+    DaughterIDs = cms.untracked.vint32(211),
+    DaughterMaxEtas = cms.untracked.vdouble(2.55),
+    DaughterMaxPts = cms.untracked.vdouble(1000000000.0),
+    DaughterMinEtas = cms.untracked.vdouble(-2.55),
+    DaughterMinPts = cms.untracked.vdouble(0.5),
+    MaxEta = cms.untracked.double(99.0),
+    MinEta = cms.untracked.double(-99.0),
+    MinPt = cms.untracked.double(-1.0),
+    MotherIDs = cms.untracked.vint32(511),
+    ParticleID = cms.untracked.int32(431)
+)
+
+process.DsToPhiFromB0Filter = cms.EDFilter("PythiaFilterMultiAncestor",
+    DaughterIDs = cms.untracked.vint32(333),
+    DaughterMaxEtas = cms.untracked.vdouble(2.55),
+    DaughterMaxPts = cms.untracked.vdouble(1000000000.0),
+    DaughterMinEtas = cms.untracked.vdouble(-2.55),
+    DaughterMinPts = cms.untracked.vdouble(0.5),
+    MaxEta = cms.untracked.double(99.0),
+    MinEta = cms.untracked.double(-99.0),
+    MinPt = cms.untracked.double(-1.0),
+    MotherIDs = cms.untracked.vint32(511),
+    ParticleID = cms.untracked.int32(431)
+)
+
 
 
 process.generator = cms.EDFilter("Pythia8GeneratorFilter",
@@ -92,99 +136,89 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             operates_on_particles = cms.vint32(511, -511),
             particle_property_file = cms.FileInPath('GeneratorInterface/EvtGenInterface/data/evt_2020.pdl'),
             user_decay_embedded = cms.vstring(
-
-'Alias      MyB0         B0',
-'Alias      Myanti-B0    anti-B0',
-'ChargeConj Myanti-B0    MyB0',
-'Alias      Mytau+       tau+',
-'Alias      Mytau-       tau-',
-'ChargeConj Mytau-       Mytau+',
-'Alias      MyDs+        D_s+',
-'Alias      MyDs-        D_s-',
-'ChargeConj MyDs-        MyDs+',
-'Alias      MyDs*+       D_s*+',
-'Alias      MyDs*-       D_s*-',
-'ChargeConj MyDs*-       MyDs*+',
-'Alias      MyPhi        phi',
-'Alias      MyDs*(2317)- D_s0*- ',
-'Alias      MyDs*(2317)+ D_s0*+ ',
-'ChargeConj MyDs*(2317)+ MyDs*(2317)-',
-'Alias      MyDs*(2457)- D_s1- ',
-'Alias      MyDs*(2457)+ D_s1+ ',
-'ChargeConj MyDs*(2457)+ MyDs*(2457)-',
-
-'Decay Mytau+',  # original BR = 0.1739
-'1.00000000 mu+ nu_mu nu_tau PHOTOS TAULNUNU;',
-'Enddecay',
-'CDecay Mytau-',
-
-'Decay MyPhi',  # original BR = 0.489
-'1.00000000 K+ K- VSS;',
-'Enddecay',
-
-'Decay MyDs+',  # original BR = 0.0221
-'1.00000000 MyPhi pi+ SVS;',
-'Enddecay',
-'CDecay MyDs-',
-
-'Decay MyDs*-',
-'0.942      MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]',
-'0.058      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]',
-'Enddecay',
-'CDecay MyDs*+',
-
-#Ds*(2317) decay, mode from LHCb:
-#https://gitlab.cern.ch/lhcb-datapkg/Gen/DecFiles/-/blob/master/dkfiles/B+_DstXc,Xc2hhhNneutrals_cocktail_3pi,upto5prongs=DecProdCut.dec?ref_type=heads
-
-'Decay MyDs*(2317)-',
-'1.00000000 MyDs- pi0 PHSP; ',
-'Enddecay',
-'CDecay MyDs*(2317)+',
-
-#Ds*(2457) decay, mode from LHCb:
-#https://gitlab.cern.ch/lhcb-datapkg/Gen/DecFiles/-/blob/master/dkfiles/B+_DstXc,Xc2hhhNneutrals_cocktail_3pi,upto5prongs=DecProdCut.dec?ref_type=heads
-
-
-# - MyDs*- gamma not present in the LHCb file, but it is in PDG, so we include it.
-#   Its mode is motivated from MyDs*- gamma decay (Line 6687 in DECAY_NOLONGLFIE_2020.DEC)
-# - LHCb is including the Ds pi0 pi0 final state, which we do not, as it is not in the PDG
-
-'Decay MyDs*(2457)+',
-'0.18           MyDs+          gamma           VSP_PWAVE;',
-'0.48           MyDs*+         pi0             PHSP;',
-'0.043          MyDs+          pi+     pi-     PHSP;',
-'0.037          MyDs*(2317)+   gamma           VSP_PWAVE;',
-'0.08           MyDs*+         gamma           PHSP;',
-'Enddecay',
-'CDecay MyDs*(2457)-',
-
-# - Mode for B0 -> Ds*+ Ds*- is taken from Bs -> Ds*+ Ds*-, given that both B mesons have the same spin.
-# - Remark: we symmetrize all decays with more than one signal by once forcing one Ds(resonance), 
-#   and then the other Ds(resonance), by dividing all BRs by a factor of 0.5 
-
-#BR and charges checked
-'Decay MyB0', 
-'0.0072 MyDs+ D- PHSP;', 
-'0.0080 D*- MyDs+ SVS; ',
-'0.0074 MyDs*+ D- SVS; ',
-'0.0177 MyDs*+ D*- SVV_HELAMP 0.4904 0.0 0.7204 0.0 0.4904 0.0;', 
-
-'0.000065 MyDs*- D_s+ SVS; ', #0.00013*0.5 = 0.000065 #separate?
-'0.000065 D_s*- MyDs+ SVS; ', #0.00013*0.5 = 0.000065 #separate?
-
-'0.00012 MyDs*- D_s*+ SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', #0.00024*0.5=0.00012 #separate? 
-'0.00012 D_s*- MyDs*+ SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', #0.00024*0.5=0.00012 #separate?
-
-'0.00106 MyDs*(2317)+ D- PHSP;',
-'0.0015 D*- MyDs*(2317)+ SVS;',
-'0.0035 MyDs*(2457)+ D- SVS;',
-'0.0093 MyDs*(2457)+ D*- SVV_HELAMP 0.4904 0. 0.7204 0. 0.4904 0.;',
-'Enddecay ',
-'CDecay Myanti-B0',
-
-'End',
-        
-        )
+                'Alias      MyB0         B0', 
+                'Alias      Myanti-B0    anti-B0', 
+                'ChargeConj Myanti-B0    MyB0', 
+                'Alias      Mytau+       tau+', 
+                'Alias      Mytau-       tau-', 
+                'ChargeConj Mytau-       Mytau+', 
+                'Alias      MyDs+        D_s+', 
+                'Alias      MyDs-        D_s-', 
+                'ChargeConj MyDs-        MyDs+', 
+                'Alias      MyDs*+       D_s*+', 
+                'Alias      MyDs*-       D_s*-', 
+                'ChargeConj MyDs*-       MyDs*+', 
+                'Alias      MyPhi        phi', 
+                'ChargeConj MyPhi        MyPhi', 
+                'Alias      MyDs*(2317)- D_s0*- ', 
+                'Alias      MyDs*(2317)+ D_s0*+ ', 
+                'ChargeConj MyDs*(2317)+ MyDs*(2317)-', 
+                'Alias      MyDs*(2457)- D_s1- ', 
+                'Alias      MyDs*(2457)+ D_s1+ ', 
+                'ChargeConj MyDs*(2457)+ MyDs*(2457)-', 
+                'Decay Mytau+', 
+                '1.00000000 mu+ nu_mu anti-nu_tau PHOTOS TAULNUNU;', 
+                'Enddecay', 
+                'CDecay Mytau-', 
+                'Decay MyPhi', 
+                '1.00000000 K+ K- VSS;', 
+                'Enddecay', 
+                'Decay MyDs+', 
+                '1.00000000 MyPhi pi+ SVS;', 
+                'Enddecay', 
+                'CDecay MyDs-', 
+                'Decay MyDs*-', 
+                '0.936      MyDs-    gamma   PHOTOS VSP_PWAVE;', 
+                '0.0577     MyDs-    pi0     PHOTOS VSS;', 
+                'Enddecay', 
+                'CDecay MyDs*+', 
+                'Decay MyDs*(2317)-', 
+                '1.00000000 MyDs- pi0 PHSP; ', 
+                'Enddecay', 
+                'CDecay MyDs*(2317)+', 
+                'Decay MyDs*(2457)+', 
+                '0.18           MyDs+          gamma           VSP_PWAVE;', 
+                '0.48           MyDs*+         pi0             PHSP;', 
+                '0.043          MyDs+          pi+     pi-     PHSP;', 
+                '0.037          MyDs*(2317)+   gamma           VSP_PWAVE;', 
+                '0.022          MyDs+          pi0     pi0     PHSP;', 
+                'Enddecay', 
+                'CDecay MyDs*(2457)-', 
+                'Decay MyB0', 
+                '0.0072 MyDs+ D- PHSP;', 
+                '0.0080 D*- MyDs+ SVS; ', 
+                '0.0074 MyDs*+ D- SVS; ', 
+                '0.0176 MyDs*+ D*- SVV_HELAMP 0.4904 0.0 0.7204 0.0 0.4904 0.0;', 
+                '0.00001 MyDs+  D_s-                                   PHSP;', 
+                '0.00001 D_s+   MyDs-                                  PHSP;', 
+                '0.00001192 MyDs*- D_s+ SVS; ', 
+                '0.000012   D_s*- MyDs+ SVS; ', 
+                '0.00001491 MyDs*- D_s*+ SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', 
+                '0.00001491 D_s*- MyDs*+ SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', 
+                '0.00106 MyDs*(2317)+ D- PHSP;', 
+                '0.0015  D*- MyDs*(2317)+ SVS;', 
+                '0.0027  MyDs*(2457)+ D- SVS;', 
+                '0.0071  MyDs*(2457)+ D*- SVV_HELAMP 0.4904 0. 0.7204 0. 0.4904 0.;', 
+                "0.0006     D\'_1-   MyDs+               SVS;", 
+                "0.001192   D\'_1-   MyDs*+              SVV_HELAMP 0.48 0.0 0.734 0.0 0.48 0.0;", 
+                '0.0012     D_1-    MyDs+               SVS;', 
+                '0.002385   D_1-    MyDs*+              SVV_HELAMP 0.48 0.0 0.734 0.0 0.48 0.0;', 
+                '0.0042     D_2*-   MyDs+               STS;', 
+                '0.003975   D_2*-   MyDs*+              PHSP;', 
+                '0.0018     MyDs+  D-  pi0             PHSP;', 
+                '0.0037     MyDs+  anti-D0 pi-         PHSP;', 
+                '0.001789   MyDs*+ D-  pi0             PHSP;', 
+                '0.003677   MyDs*+ anti-D0 pi-         PHSP;', 
+                '0.003      MyDs+  D-  pi-  pi+        PHSP;', 
+                '0.0022     MyDs+  D-  pi0  pi0        PHSP;', 
+                '0.0022     MyDs+  anti-D0 pi-  pi0    PHSP;', 
+                '0.002981   MyDs*+ D-  pi-  pi+        PHSP;', 
+                '0.002186   MyDs*+ D-  pi0  pi0        PHSP;', 
+                '0.002186   MyDs*+ anti-D0 pi-  pi0    PHSP;', 
+                'Enddecay ', 
+                'CDecay Myanti-B0', 
+                'End'
+            )
         ),
         parameterSets = cms.vstring('EvtGen130')
     ),
@@ -198,9 +232,8 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             'SoftQCD:nonDiffractive = on', 
             'PTFilter:filter = on', 
             'PTFilter:quarkToFilter = 5', 
-            'PTFilter:scaleToFilter = 1.0', 
-            '531:m0 = 5.36688', 
-            '531:tau0 = 0.457783083'
+            'PTFilter:scaleToFilter = 3.0', 
+            '511:m0 = 5.27972'
         ),
         pythia8CP5Settings = cms.vstring(
             'Tune:pp 14', 
@@ -249,14 +282,24 @@ process.DsMuMaxMassFilter = cms.EDFilter("MCParticlePairFilter",
     MaxInvMass = cms.untracked.double(8.0),
     MinEta = cms.untracked.vdouble(-1000000000.0, -1.55),
     MinPt = cms.untracked.vdouble(-1.0, 6.5),
-    ParticleCharge = cms.untracked.int32(-1),
+    ParticleCharge = cms.untracked.int32(0),
     ParticleID1 = cms.untracked.vint32(431),
     ParticleID2 = cms.untracked.vint32(13),
     Status = cms.untracked.vint32(2, 1)
 )
 
 
-process.ProductionFilterSequence = cms.Sequence(process.generator+process.PhiToKKFromDsFilter+process.DsMuMaxMassFilter)
+process.motherFilter = cms.EDFilter("MCSingleParticleFilter",
+    MaxEta = cms.untracked.vdouble(2.55, 2.55),
+    MinEta = cms.untracked.vdouble(-2.55, -2.55),
+    MinPt = cms.untracked.vdouble(0.0, 0.0),
+    ParticleID = cms.untracked.vint32(511, -511),
+    Status = cms.untracked.vint32(2, 2)
+)
+
+
+#process.ProductionFilterSequence = cms.Sequence(process.generator+process.motherFilter+process.PhiToKKFromDsFilter+process.DsToPhiPiFilter+process.DsMuMaxMassFilter)
+process.ProductionFilterSequence = cms.Sequence(process.generator+process.motherFilter+process.PhiToKKFromDsFilter+process.DsToPiFromB0Filter+process.DsToPhiFromB0Filter+process.DsMuMaxMassFilter)
 
 # Path and EndPath definitions
 process.generation_step = cms.Path(process.pgen)
@@ -268,11 +311,11 @@ process.RAWSIMoutput_step = cms.EndPath(process.RAWSIMoutput)
 process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary_step,process.endjob_step,process.RAWSIMoutput_step)
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
-
 #Setup FWK for multithreaded
 process.options.numberOfThreads=cms.untracked.uint32(8)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 process.options.numberOfConcurrentLuminosityBlocks=cms.untracked.uint32(1)
+
 # filter all path with the production filter sequence
 for path in process.paths:
 	getattr(process,path).insert(0, process.ProductionFilterSequence)
@@ -288,23 +331,13 @@ process = addMonitoring(process)
 # End of customisation functions
 
 # Customisation from command line
-from GeneratorInterface.Core.ExternalGeneratorFilter import ExternalGeneratorFilter ; process.generator = ExternalGeneratorFilter ( process.generator )
+
 # Add early deletion of temporary data products to reduce peak memory need
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
 process = customiseEarlyDelete(process)
 # End adding early deletion
 
-
 from IOMC.RandomEngine.RandomServiceHelper import  RandomNumberServiceHelper
 randHelper =  RandomNumberServiceHelper(process.RandomNumberGeneratorService)
 randHelper.populate()
 process.RandomNumberGeneratorService.saveFileName =  cms.untracked.string("RandomEngineState.log")
-
-
-
-
-
-
-
-
-

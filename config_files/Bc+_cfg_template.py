@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: Configuration/GenProduction/python/Bc+_cff_template.py --python_filename ./cfg_from_cff/Bc+_cfg_template.py --eventcontent RAWSIM --customise Configuration/DataProcessing/Utils.addMonitoring --datatier GEN --fileout file:/pnfs/psi.ch/cms/trivcat/store/user/pahwagne/RJPsi_Bc+_LHE_step0.root --conditions 106X_upgrade2018_realistic_v4 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN --geometry DB:Extended --filein file:/pnfs/psi.ch/cms/trivcat/store/user/pahwagne/RJPsi_Bc+_LHE_step0.root --era Run2_2018 --no_exec --mc
+# with command line options: rds/gen/python/Bc+_cff_template.py.py --fileout file:Bc+_test.root --mc --eventcontent RAWSIM --datatier GEN --conditions 106X_upgrade2018_realistic_v11_L1v1 --beamspot Realistic25ns13TeVEarly2018Collision --step GEN --geometry DB:Extended --era Run2_2018 --python_filename cfgs/Bc+_cfg.py --no_exec --customise Configuration/DataProcessing/Utils.addMonitoring -n -1
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.Eras.Era_Run2_2018_cff import Run2_2018
@@ -27,17 +27,11 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(HOOK_MAX_EVENTS)
 )
 
+# Dont forget me!
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+
 # Input source
-process.source = cms.Source("PoolSource",
-    firstLuminosityBlock = cms.untracked.uint32(HOOK_FIRST_LUMI),
-    dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
-    fileNames = cms.untracked.vstring('file:HOOK_FILE_IN'),
-    inputCommands = cms.untracked.vstring(
-        'keep *', 
-        'drop LHEXMLStringProduct_*_*_*'
-    ),
-    secondaryFileNames = cms.untracked.vstring()
-)
+process.source = cms.Source("EmptySource", firstLuminosityBlock = cms.untracked.uint32(HOOK_FIRST_LUMI))
 
 process.options = cms.untracked.PSet(
 
@@ -45,7 +39,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('Configuration/GenProduction/python/Bc+_cff_template.py nevts:1'),
+    annotation = cms.untracked.string('rds/gen/python/Bc+_cff_template.py.py nevts:-1'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -73,7 +67,167 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
 # Other statements
 process.genstepfilter.triggerConditions=cms.vstring("generation_step")
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v4', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '106X_upgrade2018_realistic_v11_L1v1', '')
+
+process.DsToPhiPiFilter = cms.EDFilter("PythiaFilterMultiAncestor",
+    DaughterIDs = cms.untracked.vint32(333, -333, -211),
+    DaughterMaxEtas = cms.untracked.vdouble(2.55, 2.55, 2.55),
+    DaughterMaxPts = cms.untracked.vdouble(1000000000.0, 1000000000.0, 1000000000.0),
+    DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55, -2.55),
+    DaughterMinPts = cms.untracked.vdouble(0.5, 0.5, 0.5),
+    MaxEta = cms.untracked.double(99.0),
+    MinEta = cms.untracked.double(-99.0),
+    MinPt = cms.untracked.double(-1.0),
+    MotherIDs = cms.untracked.vint32(541),
+    ParticleID = cms.untracked.int32(431)
+)
+
+
+process.PhiToKKFromDsFilter = cms.EDFilter("PythiaFilterMultiAncestor",
+    DaughterIDs = cms.untracked.vint32(-321, 321),
+    DaughterMaxEtas = cms.untracked.vdouble(2.55, 2.55),
+    DaughterMaxPts = cms.untracked.vdouble(1000000000.0, 1000000000.0),
+    DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55),
+    DaughterMinPts = cms.untracked.vdouble(0.5, 0.5),
+    MaxEta = cms.untracked.double(99.0),
+    MinEta = cms.untracked.double(-99.0),
+    MinPt = cms.untracked.double(-1.0),
+    MotherIDs = cms.untracked.vint32(431),
+    ParticleID = cms.untracked.int32(333)
+)
+
+
+process.generator = cms.EDFilter("Pythia8HadronizerFilter",
+    ExternalDecays = cms.PSet(
+        EvtGen130 = cms.untracked.PSet(
+            convertPythiaCodes = cms.untracked.bool(False),
+            decay_table = cms.string('GeneratorInterface/EvtGenInterface/data/DECAY_2020_NOLONGLIFE.DEC'),
+            list_forced_decays = cms.vstring(
+                'MyBc+', 
+                'MyBc-'
+            ),
+            operates_on_particles = cms.vint32(541, -541),
+            particle_property_file = cms.FileInPath('GeneratorInterface/EvtGenInterface/data/evt_2020.pdl'),
+            user_decay_embedded = cms.vstring(
+                'Alias      MyBc+        B_c+', 
+                'Alias      MyBc-        B_c-', 
+                'ChargeConj MyBc+        MyBc-', 
+                'Alias      Mytau+       tau+', 
+                'Alias      Mytau-       tau-', 
+                'ChargeConj Mytau-       Mytau+', 
+                'Alias      MyDs+        D_s+', 
+                'Alias      MyDs-        D_s-', 
+                'ChargeConj MyDs-        MyDs+', 
+                'Alias      MyDs*+       D_s*+', 
+                'Alias      MyDs*-       D_s*-', 
+                'ChargeConj MyDs*-       MyDs*+', 
+                'Alias      MyPhi        phi', 
+                'ChargeConj MyPhi        MyPhi', 
+                'Decay Mytau+', 
+                '1.00000000 mu+ nu_mu anti-nu_tau PHOTOS TAULNUNU;', 
+                'Enddecay', 
+                'CDecay Mytau-', 
+                'Decay MyPhi', 
+                '1.00000000 K+ K- VSS;', 
+                'Enddecay', 
+                'Decay MyDs+', 
+                '1.00000000 MyPhi pi+ SVS;', 
+                'Enddecay', 
+                'CDecay MyDs-', 
+                'Decay MyDs*-', 
+                '0.936       MyDs-    gamma   PHOTOS VSP_PWAVE; #[Reconstructed PDG2011]', 
+                '0.0577      MyDs-    pi0     PHOTOS VSS; #[Reconstructed PDG2011]', 
+                'Enddecay', 
+                'CDecay MyDs*+', 
+                'Decay MyBc+ ', 
+                '0.0000048   MyDs+ anti-D0 PHSP;', 
+                '0.0000066   MyDs+ D0 PHSP;', 
+                '0.0000071   anti-D*0 MyDs+ SVS;', 
+                '0.0000063   D*0 MyDs+ SVS;', 
+                '0.000004472 MyDs*+ anti-D0 SVS;', 
+                '0.00000845  MyDs*+ D0 SVS;', 
+                '0.00002584  MyDs*+ anti-D*0 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', 
+                '0.00004015  MyDs*+ D*0 SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', 
+                '0.0017    J/psi  D_s-       SVS;', 
+                '0.00666   J/psi  D_s*-      SVV_HELAMP 1.0 0.0 1.0 0.0 1.0 0.0;', 
+                'Enddecay ', 
+                'CDecay MyBc-', 
+                'End'
+            )
+        ),
+        parameterSets = cms.vstring('EvtGen130')
+    ),
+    PythiaParameters = cms.PSet(
+        parameterSets = cms.vstring(
+            'pythia8CommonSettings', 
+            'pythia8CP5Settings', 
+            'processParameters'
+        ),
+        processParameters = cms.vstring('541:m0 = 6.27447'),
+        pythia8CP5Settings = cms.vstring(
+            'Tune:pp 14', 
+            'Tune:ee 7', 
+            'MultipartonInteractions:ecmPow=0.03344', 
+            'MultipartonInteractions:bProfile=2', 
+            'MultipartonInteractions:pT0Ref=1.41', 
+            'MultipartonInteractions:coreRadius=0.7634', 
+            'MultipartonInteractions:coreFraction=0.63', 
+            'ColourReconnection:range=5.176', 
+            'SigmaTotal:zeroAXB=off', 
+            'SpaceShower:alphaSorder=2', 
+            'SpaceShower:alphaSvalue=0.118', 
+            'SigmaProcess:alphaSvalue=0.118', 
+            'SigmaProcess:alphaSorder=2', 
+            'MultipartonInteractions:alphaSvalue=0.118', 
+            'MultipartonInteractions:alphaSorder=2', 
+            'TimeShower:alphaSorder=2', 
+            'TimeShower:alphaSvalue=0.118', 
+            'SigmaTotal:mode = 0', 
+            'SigmaTotal:sigmaEl = 21.89', 
+            'SigmaTotal:sigmaTot = 100.309', 
+            'PDF:pSet=LHAPDF6:NNPDF31_nnlo_as_0118'
+        ),
+        pythia8CommonSettings = cms.vstring(
+            'Tune:preferLHAPDF = 2', 
+            'Main:timesAllowErrors = 10000', 
+            'Check:epTolErr = 0.01', 
+            'Beams:setProductionScalesFromLHEF = off', 
+            'SLHA:keepSM = on', 
+            'SLHA:minMassSM = 1000.', 
+            'ParticleDecays:limitTau0 = on', 
+            'ParticleDecays:tau0Max = 10', 
+            'ParticleDecays:allowPhotonRadiation = on'
+        )
+    ),
+    comEnergy = cms.double(13000.0),
+    maxEventsToPrint = cms.untracked.int32(0),
+    pythiaHepMCVerbosity = cms.untracked.bool(False),
+    pythiaPylistVerbosity = cms.untracked.int32(0)
+)
+
+
+process.DsMuMaxMassFilter = cms.EDFilter("MCParticlePairFilter",
+    MaxEta = cms.untracked.vdouble(1000000000.0, 1.55),
+    MaxInvMass = cms.untracked.double(8.0),
+    MinEta = cms.untracked.vdouble(-1000000000.0, -1.55),
+    MinPt = cms.untracked.vdouble(-1.0, 6.5),
+    ParticleCharge = cms.untracked.int32(0),
+    ParticleID1 = cms.untracked.vint32(431),
+    ParticleID2 = cms.untracked.vint32(13),
+    Status = cms.untracked.vint32(2, 1)
+)
+
+
+process.motherFilter = cms.EDFilter("MCSingleParticleFilter",
+    MaxEta = cms.untracked.vdouble(2.55, 2.55),
+    MinEta = cms.untracked.vdouble(-2.55, -2.55),
+    MinPt = cms.untracked.vdouble(0.0, 0.0),
+    ParticleID = cms.untracked.vint32(541, -541),
+    Status = cms.untracked.vint32(2, 2)
+)
+
+
+process.ProductionFilterSequence = cms.Sequence(process.generator+process.motherFilter+process.PhiToKKFromDsFilter+process.DsToPhiPiFilter+process.DsMuMaxMassFilter)
 
 # Path and EndPath definitions
 process.generation_step = cms.Path(process.pgen)
@@ -86,10 +240,15 @@ process.schedule = cms.Schedule(process.generation_step,process.genfiltersummary
 from PhysicsTools.PatAlgos.tools.helpers import associatePatAlgosToolsTask
 associatePatAlgosToolsTask(process)
 
-# Setup FWK for multithreaded
+#Setup FWK for multithreaded
 process.options.numberOfThreads=cms.untracked.uint32(8)
 process.options.numberOfStreams=cms.untracked.uint32(0)
 process.options.numberOfConcurrentLuminosityBlocks=cms.untracked.uint32(1)
+
+# filter all path with the production filter sequence
+for path in process.paths:
+	getattr(process,path).insert(0, process.ProductionFilterSequence)
+
 # customisation of the process.
 
 # Automatic addition of the customisation function from Configuration.DataProcessing.Utils
@@ -108,8 +267,10 @@ process = customiseEarlyDelete(process)
 # End adding early deletion
 
 
-#random seed for every job
 from IOMC.RandomEngine.RandomServiceHelper import  RandomNumberServiceHelper
 randHelper =  RandomNumberServiceHelper(process.RandomNumberGeneratorService)
 randHelper.populate()
 process.RandomNumberGeneratorService.saveFileName =  cms.untracked.string("RandomEngineState.log")
+
+
+
