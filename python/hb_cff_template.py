@@ -1,0 +1,111 @@
+import FWCore.ParameterSet.Config as cms
+from Configuration.Generator.Pythia8CommonSettings_cfi import *
+from Configuration.Generator.MCTunes2017.PythiaCP5Settings_cfi import *
+
+generator = cms.EDFilter("Pythia8GeneratorFilter",
+    pythiaPylistVerbosity = cms.untracked.int32(0),
+    pythiaHepMCVerbosity = cms.untracked.bool(False),
+    maxEventsToPrint = cms.untracked.int32(0),
+    comEnergy = cms.double(13000.0),
+    ExternalDecays = cms.PSet(
+        EvtGen130 = cms.untracked.PSet(
+            decay_table            = cms.string('GeneratorInterface/EvtGenInterface/data/DECAY_2014_NOLONGLIFE.DEC'),
+            particle_property_file = cms.FileInPath('GeneratorInterface/EvtGenInterface/data/evt_2014.pdl'),
+            list_forced_decays     = cms.vstring(
+                'MyDs+',
+                'MyDs-',
+            ),        
+            operates_on_particles = cms.vint32(431,-431),
+            convertPythiaCodes = cms.untracked.bool(False),
+            user_decay_embedded= cms.vstring([
+                'Alias      MyDs+      D_s+',
+                'Alias      MyDs-      D_s-',
+                'ChargeConj MyDs+      MyDs-',
+
+                'Alias      MyPhi      phi',
+                'ChargeConj MyPhi      MyPhi',
+
+                'Decay MyDs-',
+                '  1.000    MyPhi pi-    PHOTOS SVS;',
+                'Enddecay',
+                'CDecay MyDs+',
+
+                'Decay MyPhi',
+                '  1.000    K+ K-        PHOTOS VSS;',
+                'Enddecay',
+
+                'End',
+            ]),
+        ),
+        parameterSets = cms.vstring('EvtGen130')
+    ),
+    PythiaParameters = cms.PSet(
+        pythia8CommonSettingsBlock,
+        pythia8CP5SettingsBlock,
+        processParameters = cms.vstring(
+            'SoftQCD:nonDiffractive = on',
+            'PTFilter:filter = on', # this turn on the filter
+            'PTFilter:quarkToFilter = 5', # PDG id of q quark
+            'PTFilter:scaleToFilter = 5.0',
+#             'HardQCD:hardbbbar = on',
+#             'PhaseSpace:pTHatMin = 100',
+		),
+        parameterSets = cms.vstring(
+            'pythia8CommonSettings',
+            'pythia8CP5Settings',
+            'processParameters',
+        ),
+    ),
+)
+
+###### Filters ##########
+#pythia MC status documentation:
+#https://pythia.org/latest-manual/ParticleProperties.html
+
+PiFromDs = cms.EDFilter("PythiaFilterMultiMother",
+    ParticleID   = cms.untracked.int32  (211),
+    maxetacut    = cms.untracked.vdouble(2.55), #pion is final state, must be in the eta coverage
+    maxptcut     = cms.untracked.vdouble(1000000000.0),
+    minetacut    = cms.untracked.vdouble(-2.55),
+    minptcut     = cms.untracked.vdouble(0.5),
+    Status       = cms.untracked.int32(1), #pion is stable
+    MotherIDs    = cms.untracked.vint32(431),
+)
+
+PhiFromDs = cms.EDFilter("PythiaFilterMultiMother",
+    ParticleID   = cms.untracked.int32  (333),
+    maxetacut    = cms.untracked.vdouble(1.e9), #phi is intermediate state, we dont care about its eta, as long as the two kaons are covered
+    maxptcut     = cms.untracked.vdouble(1000000000.0),
+    minetacut    = cms.untracked.vdouble(-1.e9),
+    minptcut     = cms.untracked.vdouble(-1.0),
+    Status       = cms.untracked.int32(2), #phi is instable
+    MotherIDs    = cms.untracked.vint32(431),
+)
+
+PhiToKKFromDsFilter = cms.EDFilter(
+    "PythiaFilterMultiAncestor",
+    DaughterIDs     = cms.untracked.vint32 (  321,   321), # K-, K+
+    DaughterMaxEtas = cms.untracked.vdouble( 2.55,  2.55), #kaons are final state, must be in the eta coverage
+    DaughterMaxPts  = cms.untracked.vdouble( 1.e9,  1.e9),
+    DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55),
+    DaughterMinPts  = cms.untracked.vdouble(  0.5,   0.5),
+    MaxEta          = cms.untracked.double ( 99.0), #for the phi
+    MinEta          = cms.untracked.double (-99.0), #for the phi
+    MinPt           = cms.untracked.double (-1.0),  #for the phi
+    MotherIDs       = cms.untracked.vint32 (431), # Ds+
+    ParticleID      = cms.untracked.int32  (333) # phi
+)
+
+DsMuMaxMassFilter = cms.EDFilter(
+    "MCParticlePairFilter",
+    ParticleID1    = cms.untracked.vint32(431), # Ds+
+    ParticleID2    = cms.untracked.vint32(13), # mu
+    ParticleCharge = cms.untracked.int32(0), # opposite charge
+    MaxInvMass     = cms.untracked.double(8.),
+    MinPt          = cms.untracked.vdouble(-1., 7.),      # harder cut on mu pt due to HLT
+    MinEta         = cms.untracked.vdouble(-1.e9, -1.55), # harder cut on mu eta due to HLT
+    MaxEta         = cms.untracked.vdouble( 1.e9,  1.55), # "
+    Status         = cms.untracked.vint32(2, 1),
+)
+
+ProductionFilterSequence = cms.Sequence(generator + PiFromDs + PhiFromDs + PhiToKKFromDsFilter + DsMuMaxMassFilter)
