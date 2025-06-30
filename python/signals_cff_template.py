@@ -49,21 +49,21 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 'Alias      Mytau-     tau-',
 'ChargeConj Mytau-     Mytau+',
 
-'Decay Mytau+',  # original BR = 0.173937
+'Decay Mytau+',  # original BR = 0.1739 (pdg 2025)
 '1.00000000 mu+ nu_mu anti-nu_tau PHOTOS TAULNUNU;',
 'Enddecay',
 'CDecay Mytau-',
 
-'Decay MyPhi',  # original BR = 0.489
+'Decay MyPhi', 
 '1.00000000 K+ K- VSS;',
 'Enddecay',
 
-'Decay MyDs+',  # original BR = 0.0221
+'Decay MyDs+',  
 '1.00000000 MyPhi pi+ SVS;',
 'Enddecay',
 'CDecay MyDs-',
 
-'Decay MyDs*-', #sum of BR is 0.9937 
+'Decay MyDs*-', #sum of BR is 0.994 
 '0.936       MyDs-    gamma    PHOTOS VSP_PWAVE;',
 '0.0577      MyDs-    pi0      PHOTOS VSS;',
 'Enddecay',
@@ -71,11 +71,11 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 
 # Signals,
 # We set R = R* = 1, thus we directly take the same BR for tau and mu and additionnally 
-# correct for the tau forcing, i.e. multiply tau ratios by a factor of 17.3937%, 
+# correct for the tau forcing (0.1739) and Ds* forcing (0.994) 
 
 # Take also ISGW2 for mu signals in order to avoid difficulties with Hammer library.
 'Decay MyBs',
-'0.0231           MyDs-      mu+      nu_mu       PHOTOS ISGW2;', # HQET2 1.17 1.074;',
+'0.0229           MyDs-      mu+      nu_mu       PHOTOS ISGW2;', # HQET2 1.17 1.074;',
 '0.052            MyDs*-     mu+      nu_mu       PHOTOS ISGW2;', # HQET2 1.16 0.921 1.37 0.845;',
 '0.0040           MyDs-      Mytau+   nu_tau      PHOTOS ISGW2;', 
 '0.0090           MyDs*-     Mytau+   nu_tau      PHOTOS ISGW2;',
@@ -95,94 +95,80 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
          pythia8CP5SettingsBlock,
          processParameters = cms.vstring(
              'SoftQCD:nonDiffractive = on',  # minimum bias component 
-             'PTFilter:filter = on',         # this turn on the filter
+             'PTFilter:filter = on',         # this turns on the filter
              'PTFilter:quarkToFilter = 5',   # PDG id of q quark 
-             'PTFilter:scaleToFilter = 3.0', # filter scale (checked)
-             '531:m0 = 5.36693',             # mass of Bs meson, pdg 2025
-             #'ProcessLevel:all = off',
- #            'HardQCD:hardbbbar = on',
- #            'PhaseSpace:pTHatMin = 100',
+             'PTFilter:scaleToFilter = 3.0', # scale (checked)
+             '531:m0 = 5.36691',             # mass of Bs meson, pdg 2025
               ),
          parameterSets = cms.vstring(
              'pythia8CommonSettings',
              'pythia8CP5Settings',
              'processParameters',
-
-
      ),
    ),
 )
 
-# if event does not contain Bs, throw it away!
+#Filter for Bs
 motherFilter = cms.EDFilter("MCSingleParticleFilter",
-    MaxEta = cms.untracked.vdouble(2.55  , 2.55 ),
+    MaxEta = cms.untracked.vdouble(1.e9  , 1.e9 ), 
     Status = cms.untracked.vint32 (2     , 2    ), #Bs is not stable
-    MinEta = cms.untracked.vdouble(-2.55 , -2.55),
+    MinEta = cms.untracked.vdouble(-1.e9 , -1.e9),
     MinPt = cms.untracked.vdouble (0.0   , 0.0  ),
-    ParticleID = cms.untracked.vint32(531, -531) # we need to explicitly list also cc mode, I checked.
+    ParticleID = cms.untracked.vint32(531, -531 ) # we need to explicitly list also cc mode, I checked.
 )
 
+#Filter for Ds -> Pi
+PiFromDs = cms.EDFilter("PythiaFilterMultiMother",
+    ParticleID   = cms.untracked.int32  (211),
+    maxetacut    = cms.untracked.vdouble(2.55), #pion is final state, must be in the eta coverage
+    maxptcut     = cms.untracked.vdouble(1.e9),
+    minetacut    = cms.untracked.vdouble(-2.55),
+    minptcut     = cms.untracked.vdouble(0.5),
+    Status       = cms.untracked.int32(1), #pion is stable
+    MotherIDs    = cms.untracked.vint32(431),
+)
 
-# Logic: filter starts with paticle of particleID (here 333), checks if it passes all the cuts,
-# then it loops over all mother ID's (here 431), and checks if particleID is an ancestor of motherID. 
-# For this whole process, it considers only the ABS |.| of the pdg ID, so signs for ParticleID and motherIDs
-# dont matter! Now it proceeds with finding the daughters. It loops over all daughters of the particleID
-# and compares if the particle with particleID has daughters given in daugherID. 
+#Filter for Ds -> Phi
+PhiFromDs = cms.EDFilter("PythiaFilterMultiMother",
+    ParticleID   = cms.untracked.int32  (333),
+    maxetacut    = cms.untracked.vdouble(1.e9), #phi is intermediate state, we dont care about its eta, as long as the two kaons are covered
+    maxptcut     = cms.untracked.vdouble(1.e9),
+    minetacut    = cms.untracked.vdouble(-1.e9),
+    minptcut     = cms.untracked.vdouble(0.0),
+    Status       = cms.untracked.int32(2), #phi is instable
+    MotherIDs    = cms.untracked.vint32(431),
+)
 
-# Important remark: While overall charge conjugation is automatically included, i.e. for particleID, motherID and 
-# DaughterIDs, the relative charges within the DaugherIDs are important! Example: You want to filter for:
-# Lambda -> p+ pi-, then the DaughterIDs must be given as [+2212, -211] OR [-2212, +211]
-# This will then correctly pass decays of Lambda and anti-Lambda into p+ pi- and p- pi+ (I checked). However, if you give
-# [+2212, +211] OR [-2212, -211], the signal (Lambda -> p+ pi^-  and aanti-Lambda -> p- pi+) will not pass!
-
-# This is problematic for particles which are its own antiparticle! F.e. phi = 333. The state -333 does not exist.
-# But the logic of the filter looks for a -333 particle in the cc case. In this case, pass -333 as daughterID
-
+#Filter for Phi -> KK
 PhiToKKFromDsFilter = cms.EDFilter(
-     "PythiaFilterMultiAncestor",
-     DaughterIDs     = cms.untracked.vint32 ( -321,   321), # K-, K+ # relative charge is relevant!
-     DaughterMaxEtas = cms.untracked.vdouble( 2.55,  2.55), # allow full eta 
-     DaughterMaxPts  = cms.untracked.vdouble( 1.e9,  1.e9), # allow full pt
-     DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55), # dito
-     DaughterMinPts  = cms.untracked.vdouble(  0.5,   0.5), # below 0.5 bgk >> sig -> we checked
-     MaxEta          = cms.untracked.double ( 99.0), # apply to the Phi, no restrictions on phi, as it is intermediate
-     MinEta          = cms.untracked.double (-99.0), # apply to the Phi, dito (below it is even 1e9, no difference)
-     MinPt           = cms.untracked.double (-1.0),  # apply to the Phi, dito (-1 means allow all)
-     MotherIDs       = cms.untracked.vint32 (431),   # Ds  #charge irrelevant
-     ParticleID      = cms.untracked.int32  (333)    # Phi #charge irrelevant
+    "PythiaFilterMultiAncestor",
+    DaughterIDs     = cms.untracked.vint32 ( -321,   321), # K-, K+
+    DaughterMaxEtas = cms.untracked.vdouble( 2.55,  2.55), #kaons are final state, must be in the eta coverage
+    DaughterMaxPts  = cms.untracked.vdouble( 1.e9,  1.e9),
+    DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55),
+    DaughterMinPts  = cms.untracked.vdouble(  0.5,   0.5),
+    MaxEta          = cms.untracked.double ( 1.e9), #for the phi
+    MinEta          = cms.untracked.double (-1.e9), #for the phi
+    MinPt           = cms.untracked.double (0.0),   #for the phi
+    MotherIDs       = cms.untracked.vint32 (431), # Ds+
+    ParticleID      = cms.untracked.int32  (333) # phi
 )
 
-DsToPhiPiFilter = cms.EDFilter(
-     "PythiaFilterMultiAncestor",
-     #pass "anti phi" (-333) due to technitalities (see above)
-     DaughterIDs     = cms.untracked.vint32 (  333,  -333,  -211), # phi, pion #relevant charge is relevant! 
-     DaughterMaxEtas = cms.untracked.vdouble( 2.55,  2.55,  2.55),
-     DaughterMaxPts  = cms.untracked.vdouble( 1.e9,  1.e9,  1.e9),
-     DaughterMinEtas = cms.untracked.vdouble(-2.55, -2.55, -2.55),
-     DaughterMinPts  = cms.untracked.vdouble(  0.5,   0.5,   0.5),
-     MaxEta          = cms.untracked.double ( 99.0), #applied to the Ds
-     MinEta          = cms.untracked.double (-99.0), #applied to the Ds
-     MinPt           = cms.untracked.double (-1.0) , #applied to the Ds
-     MotherIDs       = cms.untracked.vint32 (531), # Bs #charge irrelevant
-     ParticleID      = cms.untracked.int32  (431)  # Ds #charge irrelevant
- )
-
-
-
+#Filter for max mass of Ds + mu
 DsMuMaxMassFilter = cms.EDFilter(
-     "MCParticlePairFilter",
-     ParticleID1    = cms.untracked.vint32(431), # Ds, #charge irrelevant
-     ParticleID2    = cms.untracked.vint32(13),  # mu  #charge irrelevant
-     ParticleCharge = cms.untracked.int32 (-1),  # opposite charge required for signals!
-     MaxInvMass     = cms.untracked.double(8.),
-     MinPt          = cms.untracked.vdouble(-1., 6.5), #trigger is at 7, allow some space
-     MinEta         = cms.untracked.vdouble(-1.e9, -1.55), #1.55 because trigger is at 1.5 (for mu) and no restrictions on Ds, bc intermediate particle 
-     MaxEta         = cms.untracked.vdouble( 1.e9,  1.55),
-     Status         = cms.untracked.vint32(2, 1),
+    "MCParticlePairFilter",
+    ParticleID1    = cms.untracked.vint32(431), # Ds+
+    ParticleID2    = cms.untracked.vint32(13), # mu
+    ParticleCharge = cms.untracked.int32(0), # opposite charge
+    MaxInvMass     = cms.untracked.double(8.),
+    MinPt          = cms.untracked.vdouble(-1., 7.),      # harder cut on mu pt due to HLT
+    MinEta         = cms.untracked.vdouble(-1.e9, -1.55), # harder cut on mu eta due to HLT
+    MaxEta         = cms.untracked.vdouble( 1.e9,  1.55), # "
+    Status         = cms.untracked.vint32(2, 1),
 )
 
-
-ProductionFilterSequence = cms.Sequence(generator + motherFilter + PhiToKKFromDsFilter + DsToPhiPiFilter + DsMuMaxMassFilter)
+#total sequence
+ProductionFilterSequence = cms.Sequence(generator + motherFilter + PiFromDs + PhiFromDs + PhiToKKFromDsFilter + DsMuMaxMassFilter)
 
 
 
