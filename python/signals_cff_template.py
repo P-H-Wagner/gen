@@ -76,9 +76,9 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
 # Take also ISGW2 for mu signals in order to avoid difficulties with Hammer library.
 'Decay MyBs',
 '0.0229           MyDs-      mu+      nu_mu       PHOTOS ISGW2;', # HQET2 1.17 1.074;',
-'0.052            MyDs*-     mu+      nu_mu       PHOTOS ISGW2;', # HQET2 1.16 0.921 1.37 0.845;',
-'0.0040           MyDs-      Mytau+   nu_tau      PHOTOS ISGW2;', 
-'0.0090           MyDs*-     Mytau+   nu_tau      PHOTOS ISGW2;',
+'0.05169          MyDs*-     mu+      nu_mu       PHOTOS ISGW2;', # HQET2 1.16 0.921 1.37 0.845;',
+'0.00398          MyDs-      Mytau+   nu_tau      PHOTOS ISGW2;', 
+'0.00899          MyDs*-     Mytau+   nu_tau      PHOTOS ISGW2;',
 'Enddecay',
 'CDecay Myanti-Bs',
 
@@ -117,27 +117,42 @@ motherFilter = cms.EDFilter("MCSingleParticleFilter",
     ParticleID = cms.untracked.vint32(531, -531 ) # we need to explicitly list also cc mode, I checked.
 )
 
-#Filter for Ds -> Pi
-PiFromDs = cms.EDFilter("PythiaFilterMultiMother",
-    ParticleID   = cms.untracked.int32  (211),
-    maxetacut    = cms.untracked.vdouble(2.55), #pion is final state, must be in the eta coverage
-    maxptcut     = cms.untracked.vdouble(1.e9),
-    minetacut    = cms.untracked.vdouble(-2.55),
-    minptcut     = cms.untracked.vdouble(0.5),
-    Status       = cms.untracked.int32(1), #pion is stable
-    MotherIDs    = cms.untracked.vint32(431),
+
+#Filter for Ds -> Pi with Ds from b quark
+PiFromDs             = cms.EDFilter("PythiaFilterMultiAncestor",
+     # pion selection (final state particle, adapt eta and pt)
+     DaughterIDs     = cms.untracked.vint32 (211),
+     DaughterMaxEtas = cms.untracked.vdouble(2.55),
+     DaughterMaxPts  = cms.untracked.vdouble(1.e9),
+     DaughterMinEtas = cms.untracked.vdouble(-2.55),
+     DaughterMinPts  = cms.untracked.vdouble(0.5),
+     # ds selection (intermediate resonance)
+     ParticleID      = cms.untracked.int32  (431),
+     MaxEta          = cms.untracked.double (1.e9),
+     MinEta          = cms.untracked.double (-1.e9),
+     MinPt           = cms.untracked.double (0.0),
+     # mom of ds is a b quark
+     MotherIDs       = cms.untracked.vint32 (5),
 )
 
-#Filter for Ds -> Phi
-PhiFromDs = cms.EDFilter("PythiaFilterMultiMother",
-    ParticleID   = cms.untracked.int32  (333),
-    maxetacut    = cms.untracked.vdouble(1.e9), #phi is intermediate state, we dont care about its eta, as long as the two kaons are covered
-    maxptcut     = cms.untracked.vdouble(1.e9),
-    minetacut    = cms.untracked.vdouble(-1.e9),
-    minptcut     = cms.untracked.vdouble(0.0),
-    Status       = cms.untracked.int32(2), #phi is instable
-    MotherIDs    = cms.untracked.vint32(431),
+
+#Filter for Ds -> Phi with Ds from b quark
+PhiFromDs           = cms.EDFilter("PythiaFilterMultiAncestor",
+     # phi selection (intermediate resonance)
+     DaughterIDs     = cms.untracked.vint32 (333),
+     DaughterMaxEtas = cms.untracked.vdouble(1.e9),
+     DaughterMaxPts  = cms.untracked.vdouble(1.e9),
+     DaughterMinEtas = cms.untracked.vdouble(-1.e9),
+     DaughterMinPts  = cms.untracked.vdouble(0.0),
+     # ds selection (intermediate resonance)
+     ParticleID      = cms.untracked.int32  (431),
+     MaxEta          = cms.untracked.double (1.e9),
+     MinEta          = cms.untracked.double (-1.e9),
+     MinPt           = cms.untracked.double (0.0),
+     # mom of ds is a b quark
+     MotherIDs       = cms.untracked.vint32 (5),
 )
+
 
 #Filter for Phi -> KK
 PhiToKKFromDsFilter = cms.EDFilter(
@@ -158,11 +173,11 @@ PhiToKKFromDsFilter = cms.EDFilter(
 DsMuMaxMassFilter = cms.EDFilter(
     "MCParticlePairFilter",
     ParticleID1    = cms.untracked.vint32(431), # Ds+
-    ParticleID2    = cms.untracked.vint32(13), # mu
-    ParticleCharge = cms.untracked.int32(0), # opposite charge
+    ParticleID2    = cms.untracked.vint32(13),  # mu
+    ParticleCharge = cms.untracked.int32(-1),   # opposite charge
     MaxInvMass     = cms.untracked.double(8.),
-    MinPt          = cms.untracked.vdouble(-1., 7.),      # harder cut on mu pt due to HLT
-    MinEta         = cms.untracked.vdouble(-1.e9, -1.55), # harder cut on mu eta due to HLT
+    MinPt          = cms.untracked.vdouble(-1., 6.8),     # cut on mu pt due to HLT
+    MinEta         = cms.untracked.vdouble(-1.e9, -1.55), # cut on mu eta due to HLT
     MaxEta         = cms.untracked.vdouble( 1.e9,  1.55), # "
     Status         = cms.untracked.vint32(2, 1),
 )
