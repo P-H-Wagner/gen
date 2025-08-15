@@ -20,12 +20,11 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('channel')
-parser.add_argument('folder')
 args = parser.parse_args()
 
 #to process
 if args.channel == "all":
-  fragments = ["sig","bs","bplus","b0","lambdab"]
+  fragments = ["signals","Bs","B+","B0","LambdaB"]
 else:
   fragments = [args.channel]
 
@@ -47,11 +46,11 @@ else:
 #Event throughout for MC without filter (for hammer) is 2ev/s
 
 
-njobs = 200 #30
-events_per_job =  1000#5000
-#queue = 'standard' ; time = 360 #720 
+njobs = 1 #30
+events_per_job =  5000#5000
+queue = 'standard' ; time = 240 #720 
 #queue = 'short'   ; time = 60
-queue = 'standard'    ; time = 360
+#queue = 'short'    ; time = 45
 
 #get date and time
 now = datetime.now()
@@ -84,7 +83,7 @@ for fragment in fragments:
     tmp_fileout = template_fileout.replace("fragment","fragment_chunk{0}".format(ijob))
     
     #input file
-    fin = open( args.folder + "/" + template_cfg, "rt") 
+    fin = open( "config_files/" + template_cfg, "rt") 
 
     #output file to write the result to
     fout = open("{0}/{1}".format(out_dir, tmp_cfg), "wt")
@@ -104,20 +103,39 @@ for fragment in fragments:
 
     to_write = '\n'.join([
         '#!/bin/bash',
+        # --- create scratch dir and create temp .sh file in scratch ---
+        'mkdir -p /scratch/pahwagne/{scratch_dir}',
+        'payload=/scratch/pahwagne/{scratch_dir}/apptainer-payload-{xxx}.sh',
+        # --- write into temp ---
+        'cat > "$payload" << EOF',
+        'cd /work/pahwagne/gen/CMSSW_10_6_37/src/rds/gen', 
+        'source $VO_CMS_SW_DIR/cmsset_default.sh', 
+        'export SCRAM_ARCH=slc7_amd64_gcc700', #export new arch
+        'cmsenv',
+        'echo ">>>> cmsenv activated"',
         'cd {dir}',
         'scramv1 runtime -sh',
-        'mkdir -p /scratch/pahwagne/{scratch_dir}',
-        'ls /scratch/pahwagne/',
         'cmsRun {cfg}',
-        'xrdcp /scratch/pahwagne/{scratch_dir}/{fout} root://t3dcachedb.psi.ch:1094///pnfs/psi.ch/cms/trivcat/store/user/pahwagne/miniAOD/{se_dir}/{fout}',
+        'xrdcp /scratch/pahwagne/{scratch_dir}/{fout} root://t3dcachedb03.psi.ch:1094///pnfs/psi.ch/cms/trivcat/store/user/pahwagne/miniAOD/{se_dir}/{fout}',
+        'EOF',
+        # --- close tmp file ---
+        'echo "printing oayload content:"',
+        'cat /scratch/pahwagne/{scratch_dir}/apptainer-payload-{xxx}.sh',
         'rm /scratch/pahwagne/{scratch_dir}/{fout}',
-        '',
+        'echo ">>>> Done, launching cfg "',
+
+        # --- make payload executable and run it in el7 singularity ---
+
+        'chmod u+x "$payload"',
+        '/cvmfs/cms.cern.ch/common/cmssw-el7  --bind /scratch,/work --command-to-run $payload'
+
     ]).format(
         dir           = '/'.join([os.getcwd(), out_dir]), 
         scratch_dir   = out_dir, 
         cfg           = tmp_cfg, 
         se_dir        = out_dir,
-        fout          = tmp_fileout
+        fout          = tmp_fileout,
+        xxx           = ijob
         )
 
     with open("%s/submitter_chunk%d.sh" %(out_dir, ijob), "wt") as flauncher: 
